@@ -1,0 +1,15 @@
+@@grammar::Danmu
+
+start = array $ ;
+
+array = { item }+ ;
+
+item = (pair | data) "/" ;
+
+pair = key "@=" data ;
+
+key = ?"[^@/]+" ;
+
+data = { char }* ;
+
+char = ?"(@S|@A|[^@/])" ;
