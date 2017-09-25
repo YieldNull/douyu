@@ -1,7 +1,10 @@
-import socket
+import asyncio
 import struct
-from douyu.msg_parser import DanmuParser, DanmuSemantics
+import time
+import os
 from grako.exceptions import FailedParse
+from douyu.msg_parser import DanmuParser, DanmuSemantics
+from douyu.persistence import Storage
 
 
 class MsgSemantics(DanmuSemantics):
@@ -65,8 +68,8 @@ class MsgParser(DanmuParser):
         return super().parse(text, rule_name, filename, buffer_class, semantics, trace, whitespace, **kwargs)
 
 
-class Douyu(object):
-    def __init__(self):
+class Room(object):
+    def __init__(self, rid):
         self.server_address = 'openbarrage.douyutv.com'
         self.server_port = 8601
 
@@ -77,18 +80,39 @@ class Douyu(object):
         self.msg_type_user = 689
         self.msg_type_server = 690
 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         self.msg_parser = MsgParser()
 
-    def login(self, room_id):
-        self.socket.connect((self.server_address, self.server_port))
-        self.send('type@=loginreq/roomid@={:d}/'.format(room_id))
-        self.recv()
-        self.send('type@=joingroup/rid@={:d}/gid@=-9999/'.format(room_id))
-        self.recv()
+        self.reader = None
+        self.writer = None
 
-    def send(self, payload):
+        self.rid = rid
+
+        self.storage = Storage()
+
+    async def listen(self, loop):
+        self.reader, self.writer = await asyncio.open_connection(self.server_address, self.server_port, loop=loop)
+
+        await self.send('type@=loginreq/roomid@={:d}/'.format(self.rid))
+        await self.recv()
+
+        await self.send('type@=joingroup/rid@={:d}/gid@=-9999/'.format(self.rid))
+        await self.recv()
+
+        heartbeat = time.time()
+        while True:
+            await self.recv()
+
+            now = time.time()
+            if now - heartbeat > 45:
+                heartbeat = now
+                await self.send('type@=mrkl/')
+
+    async def logout(self):
+        await self.send('type@=logout/')
+
+    async def send(self, payload):
+        print('PID:{:d} ROOM:{:d} {:s}'.format(os.getpid(), self.rid, payload))
+
         payload_len = len(payload)
         size = self.header_pseudo_size + payload_len + 1
 
@@ -96,42 +120,62 @@ class Douyu(object):
                            size, size,
                            self.msg_type_user, 0, 0,
                            payload.encode('utf-8'), 0)
+        self.writer.write(data)
+        await self.writer.drain()
 
-        self.socket.send(data)
+    async def recv(self):
 
-    def recv(self):
-        response = self.socket.recv(self.header_size)
+        response = await self.reader.readexactly(self.header_size)
 
         length, _, msg_type, _, _ = struct.unpack(self.header_fmt, response)
 
         assert msg_type == self.msg_type_server
-
         length = length - self.header_pseudo_size
-        response = self.socket.recv(length)
+        response = await self.reader.readexactly(length)
+
         payload, zero = struct.unpack('{:d}sB'.format(length - 1), response)
         payload = payload.decode('utf-8')
 
         msg = self.msg_parser.parse(payload)
 
-        print(msg)
+        await self.storage.store(msg)
 
         return msg
 
 
-def parse():
-    import codecs, sys
+def listen_rooms(rids):
+    loop = asyncio.get_event_loop()
 
-    parser = MsgParser()
-    with codecs.open(sys.argv[1], 'r', 'utf-8') as f:
-        line = f.readline()
-        while line != "":
-            try:
-                print(parser.parse(text=line))
-            except Exception:
-                print(line)
-            line = f.readline()
+    tasks = [loop.create_task(Room(rid).listen(loop)) for rid in rids]
+    loop.run_until_complete(asyncio.wait(tasks))
+    loop.close()
 
 
 if __name__ == '__main__':
-    t = Douyu()
-    t.login(2124270)
+    from multiprocessing import Process, cpu_count
+
+    rids = [
+        2250040,
+        2124270,
+        70231,
+        226855,
+        1811143,
+        3125893,
+        65962,
+        70231,
+        921393,
+        274874,
+        2014101,
+        3250449,
+        1432054,
+        2670580,
+        829815,
+        2152273
+    ]
+
+    n = int(len(rids) / cpu_count() / 2)
+    chunks = [rids[i:i + n] for i in range(0, len(rids), n)]
+
+    processes = [Process(target=listen_rooms, args=(rids,)) for rids in chunks]
+    [p.start() for p in processes]
+    [p.join() for p in processes]
