@@ -90,7 +90,7 @@ class Protocol(object):
 
         return msg_type, length
 
-    def unpack_payload(self, payload: bytes, length: int) -> str:
+    def unpack_payload(self, payload: bytes, length: int) -> dict:
         payload, zero = struct.unpack_from('{:d}sB'.format(length - 1), payload)
         payload = payload.decode('utf-8')
 
