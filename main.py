@@ -1,4 +1,4 @@
-from douyu.spider.danmu import listen_using_multi_process
+from danmu.douyu.danmu import schedule
 
 if __name__ == '__main__':
-    listen_using_multi_process(pcount=4)
+    schedule(pcount=4)

@@ -1,6 +1,6 @@
 import struct
 from grako.exceptions import FailedParse
-from douyu.msg_parser import DanmuParser, DanmuSemantics
+from danmu.douyu.msg.msg_parser import DanmuParser, DanmuSemantics
 
 
 class MsgSemantics(DanmuSemantics):

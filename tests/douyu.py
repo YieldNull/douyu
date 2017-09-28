@@ -1,4 +1,4 @@
-from douyu.protocol import MsgParser
+from danmu.douyu.msg.protocol import MsgParser
 
 
 def parse():
