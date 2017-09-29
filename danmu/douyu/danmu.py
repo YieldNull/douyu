@@ -70,7 +70,7 @@ class Room(object):
         heartbeat = time.time()
         while True:
             if self.is_canceled:
-                break
+                return
 
             await self.recv()
 
@@ -137,8 +137,9 @@ def process_main(pipe: Pipe, queue: Queue):
 
                 room.logger.info('Receive task')
             else:
-                tasks[rid].is_canceled = True
                 tasks[rid].logger.info('Canceling task')
+                tasks[rid].is_canceled = True
+                tasks[rid].writer.close()
 
     loop = asyncio.get_event_loop()
 
@@ -178,7 +179,6 @@ def schedule(pcount=cpu_count()):
 
     while True:
         page1 = set(indexing.metadata())
-        page2 = set(indexing.metadata(2))
 
         pending = page1 - reduce(lambda acc, x: acc | x[1]['running'], tasks.items(), set())
 
@@ -187,17 +187,18 @@ def schedule(pcount=cpu_count()):
 
             tasks[pid]['running'].add(rid)
 
-            pipes[pid].send((True, rid))
-
             logger.info('Schedule task:{:s} to process:{:d}'.format(rid, pid))
 
-        rooms = page1 | page2
+            pipes[pid].send((True, rid))
+
+        rooms = page1
 
         for pid, v in tasks.items():
             running = v['running']
             for rid in running - rooms:
-                pipes[pid].send((False, rid))
                 logger.info('Canceling task:{:s} in process:{:d}'.format(rid, pid))
+
+                pipes[pid].send((False, rid))
 
             logger.info('pid:{:d} running:{:s} finished:{:s}'.format(pid, str(v['running']), str(v['finished'])))
 
