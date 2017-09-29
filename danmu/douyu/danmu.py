@@ -120,6 +120,10 @@ async def process_task(queue: Queue, room, loop):
     except Exception as e:
         room.logger.warning('Quit room for ' + repr(e))
     finally:
+        try:
+            room.writer.close()
+        except Exception as e:
+            room.logger.warning('Error when closing writer. ' + repr(e))
         queue.put((os.getpid(), room.rid))
 
 
