@@ -71,8 +71,10 @@ class Room(object):
         while True:
             if self.is_canceled:
                 return
-
-            await self.recv()
+            try:
+                await self.recv()
+            except UnicodeDecodeError as e:
+                self.logger.warning(repr(e))
 
             now = time.time()
             if now - heartbeat > 45:
@@ -95,18 +97,17 @@ class Room(object):
         assert msg_type == Protocol.TYPE_SERVER
 
         payload = await self.reader.readexactly(payload_length)
-        msg = {}
+
         # try:
         #     msg = self.protocol.unpack_payload(payload, payload_length)
         # except UnicodeDecodeError as e:
         #     self.logger.warning('Discard packet for ' + repr(e))
         #     return
         #
-        self.logger.debug(str(msg))
 
-        msg['rid'] = self.rid
-        msg['timestamp'] = time.time()
-        msg['payload'] = payload
+        msg = {'rid': self.rid, 'timestamp': time.time(), 'payload': payload[:-1].decode('utf-8')}
+
+        self.logger.debug(str(msg))
 
         await self.storage.store(msg)
 
