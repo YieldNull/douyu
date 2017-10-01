@@ -5,10 +5,10 @@ import os
 import threading
 from functools import reduce
 from multiprocessing import Process, Pipe, Queue, cpu_count
-from danmu import settings
+from danmu import settings, get_logger
+from danmu.douyu import indexing, persistence
 from danmu.douyu.msg.protocol import Protocol
 from danmu.douyu.persistence import Storage
-from danmu.douyu import indexing
 
 
 class Counter(object):
@@ -34,9 +34,9 @@ class Counter(object):
 
 
 class Room(object):
-    def __init__(self, rid: str, storage: Storage):
-        self.server_address = 'openbarrage.douyutv.com'
-        self.server_port = 8601
+    def __init__(self, pname, rid: str, storage: Storage):
+        self.server_address = settings.SERVER_ADDRESS
+        self.server_port = settings.SERVER_PORT
 
         self.msg_type_user = 689
         self.msg_type_server = 690
@@ -49,10 +49,10 @@ class Room(object):
         self.rid = rid
         self.is_canceled = False
 
-        logger = logging.getLogger('ROOM')
+        logger = get_logger(pname, '%(asctime)s [%(name)s] %(levelname)s room:%(room)8s: %(message)s')
         logger = logging.LoggerAdapter(logger, {'room': self.rid})
-
         self.logger = logger
+
         self.storage = storage
         self.counter = Counter(self.logger, settings.COUNTER_PERIOD)
 
@@ -98,16 +98,7 @@ class Room(object):
 
         payload = await self.reader.readexactly(payload_length)
 
-        # try:
-        #     msg = self.protocol.unpack_payload(payload, payload_length)
-        # except UnicodeDecodeError as e:
-        #     self.logger.warning('Discard packet for ' + repr(e))
-        #     return
-        #
-
-        msg = {'rid': self.rid, 'timestamp': time.time(), 'payload': payload[:-1].decode('utf-8')}
-
-        self.logger.debug(str(msg))
+        msg = {'rid': self.rid, 'timestamp': time.time(), 'payload': payload}
 
         await self.storage.store(msg)
 
@@ -128,19 +119,19 @@ async def process_task(queue: Queue, room, loop):
         queue.put((os.getpid(), room.rid))
 
 
-def process_main(pipe: Pipe, queue: Queue):
+def process_main(wid, pipe: Pipe, queue: Queue):
     tasks = {}
-    storage = Storage()
+    storage = getattr(persistence, settings.STORAGE_CLASS)('Storage-{:d}'.format(wid))
 
     def listen_pipe(looop):
         while True:
             is_pending, rid = pipe.recv()
             if is_pending:
-                room = Room(rid, storage)
+                room = Room('Worker-{:d}'.format(wid), rid, storage)
                 tasks[rid] = room
                 asyncio.run_coroutine_threadsafe(process_task(queue, room, looop), looop)
 
-                room.logger.info('Receive task')
+                room.logger.info('Received task: {:s}'.format(rid))
             else:
                 tasks[rid].logger.info('Canceling task')
                 tasks[rid].is_canceled = True
@@ -157,10 +148,12 @@ def schedule(pcount=cpu_count()):
     pipes = {}
     tasks = {}
 
+    logger = get_logger('Scheduler')
+
     queue = Queue()
-    for i in range(pcount):
+    for wid in range(pcount):
         pipe, child_pipe = Pipe()
-        p = Process(target=process_main, args=(child_pipe, queue))
+        p = Process(target=process_main, args=(wid, child_pipe, queue))
         p.start()
 
         pipes[p.pid] = pipe
@@ -168,8 +161,6 @@ def schedule(pcount=cpu_count()):
             'running': set(),
             'finished': set()
         }
-
-    logger = logging.getLogger('Scheduler')
 
     def listen_queue():
         while True:
@@ -183,7 +174,7 @@ def schedule(pcount=cpu_count()):
     threading.Thread(target=listen_queue, args=()).start()
 
     while True:
-        page1 = set(indexing.metadata())
+        page1 = set(indexing.metadata()[-10:])
 
         pending = page1 - reduce(lambda acc, x: acc | x[1]['running'], tasks.items(), set())
 
