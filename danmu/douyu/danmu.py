@@ -100,7 +100,10 @@ class Room(object):
 
         msg = {'rid': self.rid, 'timestamp': time.time(), 'payload': payload}
 
-        await self.storage.store(msg)
+        if settings.STORAGE_ASYNC:
+            await self.storage.store(msg)
+        else:
+            self.storage.store(msg)
 
         self.counter.incr()
 
@@ -174,7 +177,7 @@ def schedule(pcount=cpu_count()):
     threading.Thread(target=listen_queue, args=()).start()
 
     while True:
-        page1 = set(indexing.metadata()[-10:])
+        page1 = set(indexing.metadata())
 
         pending = page1 - reduce(lambda acc, x: acc | x[1]['running'], tasks.items(), set())
 
