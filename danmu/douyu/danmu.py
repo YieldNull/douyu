@@ -177,6 +177,8 @@ def schedule(pcount=cpu_count()):
     threading.Thread(target=listen_queue, args=()).start()
 
     while True:
+        logger.info('Fetching latest rooms...')
+
         page1 = set(indexing.metadata())
 
         pending = page1 - reduce(lambda acc, x: acc | x[1]['running'], tasks.items(), set())

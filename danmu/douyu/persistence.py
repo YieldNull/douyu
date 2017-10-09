@@ -66,12 +66,14 @@ class FileStorage(Storage):
         while True:
             doc = self.jobs.get(block=True)
 
-            date = time.strftime("%Y_%m_%d")
+            date = time.strftime(settings.FILE_STORAGE_DATE_FORMAT)
             if date != self.date:
                 if self.fp is not None:
                     self.fp.close()
+
                 self.date = date
-                self.fp = open('{:s}_{:s}.txt'.format(self.name, self.date), 'a', encoding='utf-8')
+                filename = settings.FILE_STORAGE_NAME_FORMAT.format(name=self.name, date=self.date)
+                self.fp = open(filename, 'a', encoding='utf-8')
 
             try:
                 line = '{:s} {:f} {:s}\n'.format(doc['rid'], doc['timestamp'],
