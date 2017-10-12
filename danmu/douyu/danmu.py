@@ -177,33 +177,33 @@ def schedule(pcount=cpu_count()):
     threading.Thread(target=listen_queue, args=()).start()
 
     while True:
+        logger.info('Fetching latest rooms...')
+
         try:
-            logger.info('Fetching latest rooms...')
-
             page1 = set(indexing.metadata())
-
-            pending = page1 - reduce(lambda acc, x: acc | x[1]['running'], tasks.items(), set())
-
-            for rid in pending:
-                pid, _ = min(tasks.items(), key=lambda x: len(x[1]['running']))
-
-                tasks[pid]['running'].add(rid)
-
-                logger.info('Schedule task:{:s} to process:{:d}'.format(rid, pid))
-
-                pipes[pid].send((True, rid))
-
-            rooms = page1
-
-            for pid, v in tasks.items():
-                running = v['running']
-                for rid in running - rooms:
-                    logger.info('Canceling task:{:s} in process:{:d}'.format(rid, pid))
-
-                    pipes[pid].send((False, rid))
-
-                logger.info('pid:{:d} running:{:s} finished:{:s}'.format(pid, str(v['running']), str(v['finished'])))
-
-            time.sleep(settings.INDEXING_PERIOD * 60)
         except Exception as e:
-            logger.warning(repr(e))
+            logger.warning("Error in fetching:" + repr(e))
+
+        pending = page1 - reduce(lambda acc, x: acc | x[1]['running'], tasks.items(), set())
+
+        for rid in pending:
+            pid, _ = min(tasks.items(), key=lambda x: len(x[1]['running']))
+
+            tasks[pid]['running'].add(rid)
+
+            logger.info('Schedule task:{:s} to process:{:d}'.format(rid, pid))
+
+            pipes[pid].send((True, rid))
+
+        rooms = page1
+
+        for pid, v in tasks.items():
+            running = v['running']
+            for rid in running - rooms:
+                logger.info('Canceling task:{:s} in process:{:d}'.format(rid, pid))
+
+                pipes[pid].send((False, rid))
+
+            logger.info('pid:{:d} running:{:s} finished:{:s}'.format(pid, str(v['running']), str(v['finished'])))
+
+        time.sleep(settings.INDEXING_PERIOD * 60)
