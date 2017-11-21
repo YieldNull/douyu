@@ -10,4 +10,4 @@ def excepthook(tp, value, traceback):
 sys.excepthook = excepthook
 
 if __name__ == '__main__':
-    schedule(pcount=4)
+    schedule(pcount=int(sys.argv[1]), pages=int(sys.argv[2]))

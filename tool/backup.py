@@ -4,7 +4,7 @@ import time
 import subprocess
 import tempfile
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from danmu import settings
 from tool import settings as local
 
@@ -24,18 +24,20 @@ if __name__ == '__main__':
             except ValueError:
                 continue
 
-            if date < now:
+            if date == now - timedelta(days=1):
                 key = filename + '.bz2'
+
+                print('Uploading to ' + key)
 
                 temp = os.path.join(tempfile.gettempdir(), key)
                 path = os.path.join(settings.FILE_STORAGE_REPOSITORY, filename)
 
                 try:
-                    r = subprocess.run(['tar', '-cjf', temp, path])
+                    r = subprocess.run(['tar', '-cjf', temp, path], cwd=settings.FILE_STORAGE_REPOSITORY)
 
                     if r.returncode == 0:
                         bucket.put_object_from_file(key, temp)
-                        os.remove(path)
+                        # os.remove(path)
 
                 finally:
                     if os.path.isfile(temp):

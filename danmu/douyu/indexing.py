@@ -16,7 +16,7 @@ def metadata(page=1):
     }
 
     payload = requests.get(url, headers=headers).text
-    return re.findall("(?<=' data-rid=')(\d+)", payload)
+    return re.findall("(?<=data-rid=')(\d+)", payload)
 
 
 if __name__ == '__main__':

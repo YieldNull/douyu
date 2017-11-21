@@ -10,6 +10,8 @@ from danmu.douyu import indexing, persistence
 from danmu.douyu.msg.protocol import Protocol
 from danmu.douyu.persistence import Storage
 
+logger = get_logger('Scheduler')
+
 
 class Counter(object):
     def __init__(self, logger, logging_period):
@@ -147,11 +149,9 @@ def process_main(wid, pipe: Pipe, queue: Queue):
     loop.run_forever()
 
 
-def schedule(pcount=cpu_count()):
+def schedule(pcount=cpu_count(), pages=1):
     pipes = {}
     tasks = {}
-
-    logger = get_logger('Scheduler')
 
     queue = Queue()
     for wid in range(pcount):
@@ -179,12 +179,9 @@ def schedule(pcount=cpu_count()):
     while True:
         logger.info('Fetching latest rooms...')
 
-        try:
-            page1 = set(indexing.metadata())
-        except Exception as e:
-            logger.warning("Error in fetching:" + repr(e))
+        targets = target_rooms(pages)
 
-        pending = page1 - reduce(lambda acc, x: acc | x[1]['running'], tasks.items(), set())
+        pending = targets - reduce(lambda acc, x: acc | x[1]['running'], tasks.items(), set())
 
         for rid in pending:
             pid, _ = min(tasks.items(), key=lambda x: len(x[1]['running']))
@@ -195,7 +192,7 @@ def schedule(pcount=cpu_count()):
 
             pipes[pid].send((True, rid))
 
-        rooms = page1
+        rooms = targets
 
         for pid, v in tasks.items():
             running = v['running']
@@ -207,3 +204,16 @@ def schedule(pcount=cpu_count()):
             logger.info('pid:{:d} running:{:s} finished:{:s}'.format(pid, str(v['running']), str(v['finished'])))
 
         time.sleep(settings.INDEXING_PERIOD * 60)
+
+
+def target_rooms(pages):
+    target = set()
+
+    for i in range(1, pages + 1):
+        try:
+            target.update(indexing.metadata(i))
+        except Exception as e:
+            logger.warning("Error in fetching:" + repr(e))
+
+    logger.info("Targets Amount %d" % len(target))
+    return target
