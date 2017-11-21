@@ -3,7 +3,7 @@ import oss2
 import time
 import subprocess
 import tempfile
-
+import requests
 from datetime import datetime, timedelta
 from danmu import settings
 from tool import settings as local
@@ -15,6 +15,8 @@ if __name__ == '__main__':
 
     date_str = time.strftime(settings.FILE_STORAGE_DATE_FORMAT)
     now = datetime.now().date()
+
+    backed_up = []
 
     for filename in os.listdir(settings.FILE_STORAGE_REPOSITORY):
         if filename.endswith('.txt'):
@@ -39,6 +41,14 @@ if __name__ == '__main__':
                         bucket.put_object_from_file(key, temp)
                         # os.remove(path)
 
+                    backed_up.append(key)
+
                 finally:
                     if os.path.isfile(temp):
                         os.remove(temp)
+
+    if len(backed_up) > 0:
+        requests.post('https://maker.ifttt.com/trigger/DanmuBackup/with/key/dEdnuGQ6IMKs6OQ9OUWtKu',
+                      json={
+                          'value1': '<br/>'.join(backed_up)
+                      })
