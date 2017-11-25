@@ -1,6 +1,6 @@
 import sys
 import logging
-from danmu.douyu.danmu import schedule
+from danmu.spider import schedule
 
 
 def excepthook(tp, value, traceback):

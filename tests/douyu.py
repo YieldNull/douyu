@@ -1,10 +1,10 @@
-from danmu.douyu.msg.protocol import MsgParser
+from danmu.msg import GrakoParser
 
 
 def parse():
     import codecs, sys
 
-    parser = MsgParser()
+    parser = GrakoParser()
     with codecs.open(sys.argv[1], 'r', 'utf-8') as f:
         line = f.readline()
         while line != "":

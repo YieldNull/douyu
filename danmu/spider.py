@@ -6,9 +6,9 @@ import threading
 from functools import reduce
 from multiprocessing import Process, Pipe, Queue, cpu_count
 from danmu import settings, get_logger
-from danmu.douyu import indexing, persistence
-from danmu.douyu.msg.protocol import Protocol
-from danmu.douyu.persistence import Storage
+from danmu import indexing, persistence
+from danmu.msg import Protocol
+from danmu.persistence import Storage
 
 logger = get_logger('Scheduler')
 
@@ -36,12 +36,12 @@ class Counter(object):
 
 
 class Room(object):
-    def __init__(self, pname, rid: str, storage: Storage):
-        self.server_address = settings.SERVER_ADDRESS
-        self.server_port = settings.SERVER_PORT
+    server_address = settings.SERVER_ADDRESS
+    server_port = settings.SERVER_PORT
+    msg_type_user = 689
+    msg_type_server = 690
 
-        self.msg_type_user = 689
-        self.msg_type_server = 690
+    def __init__(self, pname, rid: str, storage: Storage):
 
         self.protocol = Protocol()
 

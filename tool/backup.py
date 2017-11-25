@@ -48,7 +48,7 @@ if __name__ == '__main__':
                         os.remove(temp)
 
     if len(backed_up) > 0:
-        requests.post('https://maker.ifttt.com/trigger/DanmuBackup/with/key/dEdnuGQ6IMKs6OQ9OUWtKu',
+        requests.post(local.IFTTT_WEBHOOK,
                       json={
                           'value1': '<br/>'.join(backed_up)
                       })

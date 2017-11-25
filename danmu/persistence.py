@@ -1,9 +1,9 @@
 import time
 import threading
 import queue
-from danmu import settings, get_logger
+from danmu import settings, get_logger, msg
+from danmu.msg import Protocol
 from motor.motor_asyncio import AsyncIOMotorClient
-from danmu.douyu.msg.protocol import Protocol
 
 
 class Storage(object):
@@ -26,6 +26,7 @@ class MongodbStorage(Storage):
         self.collection = database[settings.MONGODB_COLLECTION]
 
         self.protocol = Protocol()
+        self.parser = getattr(msg, settings.PARSER_CLASS)()
 
         self.logger = get_logger(name)
 
@@ -34,9 +35,9 @@ class MongodbStorage(Storage):
 
         if settings.MONGODB_PARSE_MSG:
             try:
-                msg = self.protocol.unpack_payload(payload, len(payload))
+                message = self.protocol.unpack_payload(self.parser, payload)
                 doc.pop('payload')
-                doc.update(msg)
+                doc.update(message)
             except UnicodeDecodeError as e:
                 self.logger.warning('Discard packet for ' + repr(e))
                 return
@@ -62,7 +63,7 @@ class FileStorage(Storage):
         self.jobs = queue.Queue()
         self.logger = get_logger(name)
 
-    def handle_thread(self):
+    def handler_thread(self):
         while True:
             doc = self.jobs.get(block=True)
 
@@ -85,7 +86,7 @@ class FileStorage(Storage):
 
     def store(self, doc):
         if self.thread is None:
-            self.thread = threading.Thread(target=self.handle_thread)
+            self.thread = threading.Thread(target=self.handler_thread)
             self.thread.start()
         self.jobs.put(doc)
 
