@@ -2,3 +2,4 @@
 __pycache__/
 .idea
 tool/settings.py
+.DS_Store
