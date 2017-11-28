@@ -5,8 +5,8 @@ import os
 import threading
 from functools import reduce
 from multiprocessing import Process, Pipe, Queue, cpu_count
-from danmu import settings, get_logger
-from danmu import indexing, persistence
+from danmu import settings, get_logger, persistence
+from danmu.spider import indexing
 from danmu.msg import Protocol
 from danmu.persistence import Storage
 
@@ -51,9 +51,9 @@ class Room(object):
         self.rid = rid
         self.is_canceled = False
 
-        logger = get_logger(pname, '%(asctime)s [%(name)s] %(levelname)s room:%(room)8s: %(message)s')
-        logger = logging.LoggerAdapter(logger, {'room': self.rid})
-        self.logger = logger
+        _logger = get_logger(pname, '%(asctime)s [%(name)s] %(levelname)s room:%(room)8s: %(message)s')
+        _logger = logging.LoggerAdapter(_logger, {'room': self.rid})
+        self.logger = _logger
 
         self.storage = storage
         self.counter = Counter(self.logger, settings.COUNTER_PERIOD)
@@ -179,7 +179,7 @@ def schedule(pcount=cpu_count(), pages=1):
     while True:
         logger.info('Fetching latest rooms...')
 
-        targets = target_rooms(pages)
+        targets = indexing.target_rids(pages)
 
         pending = targets - reduce(lambda acc, x: acc | x[1]['running'], tasks.items(), set())
 
@@ -204,16 +204,3 @@ def schedule(pcount=cpu_count(), pages=1):
             logger.info('pid:{:d} running:{:s} finished:{:s}'.format(pid, str(v['running']), str(v['finished'])))
 
         time.sleep(settings.INDEXING_PERIOD * 60)
-
-
-def target_rooms(pages):
-    target = set()
-
-    for i in range(1, pages + 1):
-        try:
-            target.update(indexing.metadata(i))
-        except Exception as e:
-            logger.warning("Error in fetching:" + repr(e))
-
-    logger.info("Targets Amount %d" % len(target))
-    return target
