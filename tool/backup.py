@@ -39,7 +39,9 @@ if __name__ == '__main__':
 
                     if r.returncode == 0:
                         bucket.put_object_from_file(key, temp)
-                        # os.remove(path)
+
+                        if local.DELETE_SRC:
+                            os.remove(path)
 
                     backed_up.append(key)
 

@@ -2,3 +2,5 @@ grako
 motor
 requests
 oss2
+peewee
+PyMySQL

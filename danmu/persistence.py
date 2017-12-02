@@ -80,7 +80,7 @@ class FileStorage(Storage):
                 line = '{:s} {:f} {:s}\n'.format(doc['rid'], doc['timestamp'],
                                                  doc['payload'][:-1].decode('utf-8'))
             except UnicodeDecodeError as e:
-                self.logger.warning(repr(e))
+                self.logger.debug(repr(e))
             self.fp.write(line)
             self.logger.debug('Store ' + line)
 
