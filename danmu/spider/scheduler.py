@@ -10,16 +10,20 @@ from danmu.spider import indexing
 from danmu.msg import Protocol
 from danmu.persistence import Storage
 
+"""
+https://yieldnull.com/blog/f9a25fe711158017f5bf82b0ab41f3dcd114bc7a/
+"""
+
 logger = get_logger('Scheduler')
 
 
 class Counter(object):
-    def __init__(self, logger, logging_period):
+    def __init__(self, _logger, logging_period):
         self.counter_all = 0
         self.counter_period = 0
         self.counter_time = time.time()
 
-        self.logger = logger
+        self.logger = _logger
         self.logging_period = logging_period * 60
 
     def incr(self):

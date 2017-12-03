@@ -1,6 +1,8 @@
 import time
 import threading
 import queue
+import json
+from mq import RawProducer
 from danmu import settings, get_logger, msg
 from danmu.msg import Protocol
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -59,9 +61,13 @@ class FileStorage(Storage):
         self.name = name
         self.date = ''
         self.fp = None
-        self.thread = None
         self.jobs = queue.Queue()
         self.logger = get_logger(name)
+
+        self.producer = RawProducer()
+
+        self.thread = threading.Thread(target=self.handler_thread)
+        self.thread.start()
 
     def handler_thread(self):
         while True:
@@ -77,19 +83,27 @@ class FileStorage(Storage):
                 self.fp = open(filename, 'a', encoding='utf-8')
 
             try:
-                line = '{:s} {:f} {:s}\n'.format(doc['rid'], doc['timestamp'],
-                                                 doc['payload'][:-1].decode('utf-8'))
+                raw = doc['payload'][:-1].decode('utf-8')
+
+                line = '{:s} {:f} {:s}\n'.format(doc['rid'], doc['timestamp'], raw)
+                self.fp.write(line)
+                self.logger.debug('Store ' + line)
+
+                self.producer.send(route=RawProducer.ROUTE_PARSER,
+                                   msg=json.dumps({'rid': doc['rid'], 'ts': doc['timestamp'], 'raw': raw}))
+
             except UnicodeDecodeError as e:
                 self.logger.debug(repr(e))
-            self.fp.write(line)
-            self.logger.debug('Store ' + line)
 
     def store(self, doc):
-        if self.thread is None:
+        if not self.thread.is_alive():
             self.thread = threading.Thread(target=self.handler_thread)
             self.thread.start()
+            self.logger.warn("Working thread was dead. Restarting")
+
         self.jobs.put(doc)
 
     def close(self):
         if self.fp is not None:
             self.fp.close()
+        self.producer.close()
