@@ -1,6 +1,6 @@
 import pika
 import json
-from mq import RawProducer, MsgProducer
+from mq import RawProducer, StreamProducer
 from danmu.msg import RegexParser
 
 
@@ -21,7 +21,7 @@ class ParserConsumer(object):
         self.channel.basic_consume(self.callback, queue=queue_name, no_ack=True)
         self.parser = RegexParser()
 
-        self.producer = MsgProducer()
+        self.producer = StreamProducer()
 
     def callback(self, ch, method, properties, body):
         doc = json.loads(body)
@@ -29,7 +29,7 @@ class ParserConsumer(object):
 
         if msg['type'] != 'other':
             msg.update({'rid': doc['rid'], 'ts': doc['ts']})
-            self.producer.send(MsgProducer.ROUTE_STREAM + doc['rid'], json.dumps(msg))
+            self.producer.send(StreamProducer.ROUTE_STREAM + doc['rid'], json.dumps(msg))
 
             print(msg)
 
@@ -37,21 +37,27 @@ class ParserConsumer(object):
         self.channel.start_consuming()
 
 
-class MsgConsumer(object):
+class DanmuConsumer(object):
+    """
+    Unused. Use Web STOMP instead.
+    http://www.rabbitmq.com/web-stomp.html
+    https://www.rabbitmq.com/stomp.html
+    """
+
     def __init__(self, rid: str, handler, host='localhost', port=5672):
         self.handler = handler
 
         self.conn = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
         self.channel = self.conn.channel()
 
-        self.channel.exchange_declare(exchange=MsgProducer.EXCHANGE, exchange_type='topic')
+        self.channel.exchange_declare(exchange=StreamProducer.EXCHANGE, exchange_type='topic')
 
         result = self.channel.queue_declare()
         queue_name = result.method.queue
 
-        self.channel.queue_bind(exchange=MsgProducer.EXCHANGE,
+        self.channel.queue_bind(exchange=StreamProducer.EXCHANGE,
                                 queue=queue_name,
-                                routing_key=MsgProducer.ROUTE_STREAM + rid)
+                                routing_key=StreamProducer.ROUTE_STREAM + rid)
 
         self.channel.basic_consume(self.callback, queue=queue_name, no_ack=True)
 
@@ -64,5 +70,4 @@ class MsgConsumer(object):
 
 
 if __name__ == '__main__':
-    con = ParserConsumer()
-    con.start()
+    ParserConsumer().start()

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket demo</title>
+</head>
+<body>
+
+<script src="stomp.min.js"></script>
+
+<script>
+    var ws = new WebSocket("ws://127.0.0.1:15674/ws"),
+        messages = document.createElement('ul');
+
+    document.body.appendChild(messages);
+
+    var client = Stomp.over(ws);
+
+
+    client.debug = function (m) {
+
+    };
+
+    var on_connect = function (x) {
+        id = client.subscribe("/topic/stream.room.138286", function (m) {
+            var doc = JSON.parse(m.body);
+
+            if (doc.type ==='chatmsg') {
+                console.log(doc.content);
+            }
+        });
+    };
+
+    var on_error = function () {
+        console.log('error');
+    };
+
+    client.connect('guest', 'guest', on_connect, on_error, '/');
+
+</script>
+</body>
+</html>
