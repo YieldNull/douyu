@@ -1,6 +1,6 @@
 import pika
 import json
-from mq import RawProducer, StreamProducer
+from danmu.mq import RawProducer, StreamProducer
 from danmu.msg import RegexParser
 
 
@@ -25,13 +25,16 @@ class ParserConsumer(object):
 
     def callback(self, ch, method, properties, body):
         doc = json.loads(body)
-        msg = self.parser.parse(doc['raw'])
+        try:
+            msg = self.parser.parse(doc['raw'])
 
-        if msg['type'] != 'other':
-            msg.update({'rid': doc['rid'], 'ts': doc['ts']})
-            self.producer.send(StreamProducer.ROUTE_STREAM + doc['rid'], json.dumps(msg))
+            if msg['type'] != 'other':
+                msg.update({'rid': doc['rid'], 'ts': doc['ts']})
+                self.producer.send(StreamProducer.ROUTE_STREAM + doc['rid'], json.dumps(msg))
 
-            print(msg)
+                print(msg)
+        except Exception as e:
+            print(repr(e))
 
     def start(self):
         self.channel.start_consuming()

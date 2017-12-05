@@ -2,7 +2,7 @@ import time
 import threading
 import queue
 import json
-from mq import RawProducer
+from danmu.mq import RawProducer
 from danmu import settings, get_logger, msg
 from danmu.msg import Protocol
 from motor.motor_asyncio import AsyncIOMotorClient
