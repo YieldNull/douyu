@@ -2,7 +2,7 @@ import pika
 
 
 class RawProducer(object):
-    EXCHANGE = 'raw'
+    EXCHANGE = 'danmu.raw'
     ROUTE_PARSER = 'parser'
 
     def __init__(self, host='localhost', port=5672):
@@ -20,7 +20,7 @@ class RawProducer(object):
 
 
 class StreamProducer(object):
-    EXCHANGE = 'amq.topic' # use build-in exchange for Web STOMP
+    EXCHANGE = 'amq.topic'  # use build-in exchange for Web STOMP
 
     ROUTE_STREAM = 'stream.room.'
 
@@ -36,7 +36,7 @@ class StreamProducer(object):
 
 
 class MetaProducer(object):
-    EXCHANGE = 'meta'
+    EXCHANGE = 'danmu.meta'
 
     ROUTE_HOTTEST = 'hottest'
 

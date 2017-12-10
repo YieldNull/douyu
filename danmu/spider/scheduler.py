@@ -166,7 +166,7 @@ def schedule(pcount=cpu_count(), pages=1):
         pipes[p.pid] = pipe
         tasks[p.pid] = {
             'running': set(),
-            'finished': set()
+            # 'finished': set()
         }
 
     def listen_queue():
@@ -176,7 +176,7 @@ def schedule(pcount=cpu_count(), pages=1):
 
             pp = tasks[_pid]
             pp['running'].remove(_rid)
-            pp['finished'].add(_rid)
+            # pp['finished'].add(_rid)
 
     threading.Thread(target=listen_queue, args=()).start()
 
@@ -205,6 +205,7 @@ def schedule(pcount=cpu_count(), pages=1):
 
                 pipes[pid].send((False, rid))
 
-            logger.info('pid:{:d} running:{:s} finished:{:s}'.format(pid, str(v['running']), str(v['finished'])))
+            # logger.info('pid:{:d} running:{:s} finished:{:s}'.format(pid, str(v['running']), str(v['finished'])))
+            logger.info('pid:{:d} running:{:s}'.format(pid, str(v['running'])))
 
         time.sleep(settings.INDEXING_PERIOD * 60)
