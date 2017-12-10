@@ -5,3 +5,5 @@ oss2
 peewee
 PyMySQL
 pika
+redis
+Flask

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='semantic/semantic.min.css') }}">
+
+    <title>
+        {% block title %}
+        {% endblock %} | 直播弹幕大数据分析
+    </title>
+
+    <style>
+        body {
+            padding: 1em;
+        }
+
+        .ui.menu {
+            /* margin: 3em 0em; */
+            width: 80%;
+            margin: auto;
+            background: image("{{ url_for('static',filename='images/header.psd') }}")
+        }
+
+        .ui.menu:last-child {
+            margin-bottom: 110px;
+        }
+
+        .maincontent {
+            position: relative;
+            top: 5%;
+        }
+
+        .maincontent, .homepage {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+    </style>
+
+    {% block css %}
+    {% endblock %}
+</head>
+<body>
+
+<div class="ui menu">
+    <img src="{{ url_for('static',filename='images/small-logo.png') }}" class="logo-image ui image">
+    <a id="homepage" class="item active"><h3 style="display:inline">主页</h3></a>
+    <a id="live" class="item"><h3 style="display:inline">直播</h3></a>
+    <a class="item"><h3 style="display:inline">排行榜</h3></a>
+    <a class="item"><h3 style="display:inline">统计</h3></a>
+    <a id="graph" class="item"><h3 style="display:inline">图数据</h3></a>
+    <a class="item"><h3 style="display:inline">推荐</h3></a>
+    <div class="right menu">
+        <div class="item">
+            <div class="ui action left icon input">
+                <i class="search icon"></i>
+                <input type="text" placeholder="房间ID/主播ID">
+                <button class="ui button">搜索</button>
+            </div>
+        </div>
+        <a id="login" class="item">login</a>
+    </div>
+</div>
+
+<div class="maincontent">
+    {% block content %}
+    {% endblock %}
+</div>
+
+
+<script src="{{ url_for('static',filename='semantic/jquery.min.js') }}"></script>
+<script src="{{ url_for('static',filename='semantic/semantic.min.js') }}"></script>
+
+{% block script %}
+{% endblock %}
+</body>
+</html>

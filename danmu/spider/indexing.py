@@ -1,8 +1,10 @@
 import requests
-
 from danmu import get_logger
+from danmu.redis import RedisClient
 
 logger = get_logger('MetaFetcher')
+
+client = RedisClient()
 
 
 def metadata(page=1):
@@ -24,6 +26,18 @@ def metadata(page=1):
         return []
     else:
         rt = payload['data']['rl']
+
+        client.save_meta([
+            {
+                'rid': str(item['rid']),
+                'img': item['rs1'],
+                'cate': item['c2name'],
+                'cateUrl': item['c2url'],
+                'online': item['ol'],
+                'roomName': item['rn'],
+                'nickName': item['nn']
+            } for item in rt])
+
         return [str(item['rid']) for item in rt]
 
 
