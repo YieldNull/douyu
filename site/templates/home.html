@@ -1,206 +1,47 @@
 {% extends 'base.html' %}
 
-{% block css %}
-    <style>
-        body {
-            padding: 1em;
-        }
-
-        .ui.middle.aligned.four.column.grid .column.main .left-label .item {
-            text-align: center;
-            border: 1px solid rgba(34, 36, 38, 0.15);
-            padding: 10px 40px;
-            border-radius: 10px;
-            -moz-border-radius: 10px;
-
-        }
-
-        .ui.middle.aligned.four.column.grid .column.main .left-label .item a {
-            color: black;
-        }
-
-        .ui.middle.aligned.four.column.grid .column.main .left-label {
-            width: 60%;
-            margin: auto;
-            top: 30%;
-        }
-
-        .four.wide.column {
-            border: 1px;
-            border-color: rgb(250, 249, 249);
-        }
-
-        .ui.middle.aligned.four.column.grid .column.main .info-continer {
-            background: white;
-        }
-
-        .ui.middle.aligned.four.column.grid .column.main .info {
-            position: relative;
-            width: 70%;
-            left: 30%;
-            color: grey
-        }
-
-        .ui.middle.aligned.four.column.grid .column.main .info h3 {
-            position: relative;
-            width: 70%;
-            left: 12%;
-            color: black
-        }
-
-        .ui.middle.aligned.four.column.grid .column.main .info .type, .users-num, .bullets-num {
-            position: relative;
-            left: 30px
-        }
-
-        .ui.middle.aligned.four.column.grid .column.main.left {
-            position: relative;
-            left: -2%;
-        }
-
-        .ui.middle.aligned.four.column.grid .column.main.a, .column.main.b, .column.main.c {
-            position: relative;
-            left: -3%;
-            top: 2%;
-        }
-    </style>
-{% endblock %}
 
 {% block content %}
-    <div class="ui middle aligned four column grid">
-        <div class="row">
-            <div class="column main left">
-                <div class="left-label">
-                    <div class="ui middle aligned selection list">
-                        <div class="item">
-                            <div class="content">
-                                <div class="header">
-                                    <a>英雄联盟</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="content">
-                                <div class="header">
-                                    <a>绝地求生</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <!-- <img class="ui avatar image" src="/images/avatar/small/daniel.jpg"> -->
-                            <div class="content">
-                                <div class="header">
-                                    <a>DOTA2</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="content">
-                                <div class="header">
-                                    <a>守望先锋</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="content">
-                                <div class="header">
-                                    <a>炉石传说</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <!-- <img class="ui avatar image" src="/images/avatar/small/daniel.jpg"> -->
-                            <div class="content">
-                                <div class="header">
-                                    <a>穿越火线</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="content">
-                                <div class="header">
-                                    <a>王者荣耀</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="content">
-                                <div class="header">
-                                    <a>我的时间</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <!-- <img class="ui avatar image" src="/images/avatar/small/daniel.jpg"> -->
-                            <div class="content">
-                                <div class="header">
-                                    <a>饥荒</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="content">
-                                <div class="header">
-                                    <a>DNF</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="content">
-                                <div class="header">
-                                    <a>魔兽争霸</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="content">
-                                <div class="header">
-                                    <a>CS:GO</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="column main a">
 
-                {% for item in meta[::3] %}
-                    <div class="column">
-                        <img src="{{ item['img'] }}">
+
+    <div class="ui stackable four column grid">
+        <div class="sixteen wide center aligned column">
+            <a class="ui red label">全部</a>
+            <a class="ui orange label">热门游戏</a>
+            <a class="ui yellow label">王者荣耀</a>
+            <a class="ui olive label">客厅游戏</a>
+            <a class="ui green label">炉石传说</a>
+            <a class="ui teal label">唱歌</a>
+            <a class="ui blue label">科技</a>
+            <a class="ui violet label">搞笑</a>
+            <!-- <a class="ui purple label">紫色</a>
+                <a class="ui pink label">粉色</a>
+                <a class="ui brown label">褐色</a>
+                <a class="ui grey label">灰色</a>
+                <a class="ui black label">Black</a> -->
+        </div>
+                {% for item in meta %}
+                    <div class="column main">
                         <div class="info-continer">
+                            <div class="image">
+                                <img src="{{ item['img'] }}">
+                            </div>
                             <div class="info">
-                                <h3>By<a href="#">{{ item['nickName'] }}</a></h3>
+                                <div class="room">
+                                    <a href="#">{{ item['roomName'] }}</a>
+                                </div>
                                 <span>
-                                    <i class="heartbeat icon"></i>
-                                    <span class="type">王者荣耀</span>
+                                   <i class="user icon" style="color: purple"></i>
+                                   <span class="username">{{ item['nickName'] }}</span>
                                 </span>
                                 <br>
                                 <span>
-                                    <i class="users icon"> </i>
-                                    <span class="users-num">{{ item['online'] }}</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-
-            </div>
-
-            <div class="column main b">
-
-                {% for item in meta[1::3] %}
-                    <div class="column">
-                        <img src="{{ item['img'] }}">
-                        <div class="info-continer">
-                            <div class="info">
-                                <h3>By<a href="#">{{ item['nickName'] }}</a></h3>
-                                <span>
-                                    <i class="heartbeat icon"></i>
+                                    <i class="heartbeat icon" style="color: red"></i>
                                     <span class="type">{{ item['cate'] }}</span>
                                 </span>
                                 <br>
                                 <span>
-                                    <i class="users icon"> </i>
+                                    <i class="users icon"  style="color:darkblue"> </i>
                                     <span class="users-num">{{ item['online'] }}</span>
                                 </span>
                             </div>
@@ -208,32 +49,95 @@
                     </div>
                 {% endfor %}
 
-            </div>
-
-            <div class="column main c">
-
-                {% for item in meta[2::3] %}
-                    <div class="column">
-                        <img src="{{ item['img'] }}">
-                        <div class="info-continer">
-                            <div class="info">
-                                <h3>By<a href="#">{{ item['nickName'] }}</a></h3>
-                                <span>
-                                    <i class="heartbeat icon"></i>
-                                    <span class="type">王者荣耀</span>
-                                </span>
-                                <br>
-                                <span>
-                                    <i class="users icon"> </i>
-                                    <span class="users-num">{{ item['online'] }}</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-
-            </div>
-        </div>
     </div>
 
+{% endblock %}
+
+{% block css %}
+    <style>
+        body {
+            padding: 1em;
+            background: rgba(76, 79, 82, 0.07);
+        }
+        .ui.stackable.four.column.grid{
+            margin: auto;
+            width:80%;
+        }
+        .ui.stackable.four.column.grid .column.main{
+            width: 260px;
+            height: 250px;
+            margin: auto;
+        }
+
+        .ui.stackable.four.column.grid .column.main .info-continer {
+            width: 232px;
+            height: 240px;
+            background: white;
+            text-decoration: none;
+            border-radius: 5px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            -webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            text-shadow: 0 -1px 1px rgba(0,0,0,0.25);
+            border-bottom: 1px solid rgba(0,0,0,0.25);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .ui.stackable.four.column.grid .column.main .info {
+            position: relative;
+            width: 200px;
+            color: grey;
+            left: 20px;
+            margin: 0px;
+            margin-bottom: 5px;
+        }
+        .ui.stackable.four.column.grid .column.main .info .room a {
+            position: relative;
+            left: 5px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .ui.stackable.four.column.grid .column.main .info .room {
+            position: relative;
+            margin: auto;
+            height: 40px;
+            top:11px;
+            bottom: 9px;
+            font-size: 19px;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            -o-text-overflow:ellipsis;
+            -webkit-text-overflow:ellipsis;
+            -moz-text-overflow:ellipsis;
+            white-space:nowrap;
+
+        }
+
+        .ui.stackable.four.column.grid .column.main .info .type, .users-num, .username,.bullets-num {
+            position: relative;
+            left: 30px
+        }
+
+        .ui.stackable.four.column.grid .column.main .image{
+            width: 232px;
+            height: 130px;
+            overflow: hidden;
+
+        }
+        .ui.stackable.four.column.grid .column.main .image img{
+            width: 232px;
+            {#height: 130px;#}
+            odject-fit:cover;
+            border-radius: 5px 5px 0px 0px;
+        }
+        .sixteen.wide.center.aligned.column a{
+            width: 100px;
+            /* padding-left: 20px; */
+        }
+
+    </style>
 {% endblock %}
