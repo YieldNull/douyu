@@ -12,7 +12,7 @@ class ParserConsumer(object):
         self.channel.exchange_declare(exchange=RawProducer.EXCHANGE, exchange_type='direct')
 
         queue_name = 'danmu.queue.raw'
-        self.channel.queue_declare(queue=queue_name)
+        self.channel.queue_declare(queue=queue_name, auto_delete=True)
 
         self.channel.queue_bind(exchange=RawProducer.EXCHANGE,
                                 queue=queue_name,

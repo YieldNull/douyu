@@ -7,3 +7,6 @@ PyMySQL
 pika
 redis
 Flask
+pymongo
+scrapy
+scrapy-random-useragent
