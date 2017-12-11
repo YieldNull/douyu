@@ -4,7 +4,7 @@
 {% block content %}
 
 
-    <div class="ui stackable four column grid">
+    <div class="ui stackable centered five column grid">
         <div class="sixteen wide center aligned column">
             <a class="ui red label">全部</a>
             <a class="ui orange label">热门游戏</a>
@@ -22,7 +22,7 @@
         </div>
                 {% for item in meta %}
                     <div class="column main">
-                        <div class="info-continer">
+                        <div class="ui link card info-continer">
                             <div class="image">
                                 <img src="{{ item['img'] }}">
                             </div>
@@ -59,33 +59,30 @@
             padding: 1em;
             background: rgba(76, 79, 82, 0.07);
         }
-        .ui.stackable.four.column.grid{
+        .ui.stackable.five.column.grid{
             margin: auto;
             width:80%;
         }
-        .ui.stackable.four.column.grid .column.main{
-            width: 260px;
-            height: 250px;
-            margin: auto;
+        .ui.stackable.five.column.grid .column.main{
+            width: 232px;
+            height: 240px;
+            margin-right: 20px;
+            margin-bottom: 30px;
+            padding:0px;
         }
 
-        .ui.stackable.four.column.grid .column.main .info-continer {
+        .ui.stackable.five.column.grid .column.main .info-continer {
             width: 232px;
             height: 240px;
             background: white;
             text-decoration: none;
             border-radius: 5px;
-            -moz-border-radius: 5px;
-            -webkit-border-radius: 5px;
-            -moz-box-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            -webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            text-shadow: 0 -1px 1px rgba(0,0,0,0.25);
-            border-bottom: 1px solid rgba(0,0,0,0.25);
+            box-shadow: 0px 2px 4px 0px rgba(34, 36, 38, 0.12), 0px 2px 10px 0px rgba(34, 36, 38, 0.15);
             position: relative;
             cursor: pointer;
         }
 
-        .ui.stackable.four.column.grid .column.main .info {
+        .ui.stackable.five.column.grid .column.main .info {
             position: relative;
             width: 200px;
             color: grey;
@@ -93,7 +90,7 @@
             margin: 0px;
             margin-bottom: 5px;
         }
-        .ui.stackable.four.column.grid .column.main .info .room a {
+        .ui.stackable.five.column.grid .column.main .info .room a {
             position: relative;
             left: 5px;
             font-family: 'Roboto', sans-serif;
@@ -101,7 +98,7 @@
             color: #111;
         }
 
-        .ui.stackable.four.column.grid .column.main .info .room {
+        .ui.stackable.five.column.grid .column.main .info .room {
             position: relative;
             margin: auto;
             height: 40px;
@@ -117,18 +114,18 @@
 
         }
 
-        .ui.stackable.four.column.grid .column.main .info .type, .users-num, .username,.bullets-num {
+        .ui.stackable.five.column.grid .column.main .info .type, .users-num, .username,.bullets-num {
             position: relative;
             left: 30px
         }
 
-        .ui.stackable.four.column.grid .column.main .image{
+        .ui.stackable.five.column.grid .column.main .image{
             width: 232px;
             height: 130px;
             overflow: hidden;
 
         }
-        .ui.stackable.four.column.grid .column.main .image img{
+        .ui.stackable.five.column.grid .column.main .image img{
             width: 232px;
             {#height: 130px;#}
             odject-fit:cover;
