@@ -3,13 +3,13 @@ import json
 
 
 class RedisClient(object):
-    KEY_DANMU_META = 'danmu.meta'
+    KEY_ONLINE_RID = 'danmu.meta.online'
 
     def __init__(self):
         self.client = redis.StrictRedis(decode_responses=True)
 
-    def save_meta(self, data):
-        self.client.set(self.KEY_DANMU_META, json.dumps(data))
+    def save_online_rid(self, rids: list):
+        self.client.set(self.KEY_ONLINE_RID, json.dumps(rids))
 
-    def load_meta(self):
-        return json.loads(self.client.get(self.KEY_DANMU_META))
+    def load_online_rid(self) -> list:
+        return json.loads(self.client.get(self.KEY_ONLINE_RID))
