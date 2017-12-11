@@ -1,20 +1,10 @@
-<style>
-    .twelve.wide.column {
-        position: relative;
-        left: 5%;
-    }
+{% extends 'base.html' %}
 
-    .four.wide.column {
-        position: relative;
-        right: 5%;
-    }
-
-</style>
-
+{% block content %}
 <div class="ui two column centered grid">
     <div class="four column centered row">
         <div class="column">
-            <a class="ui red tag label" style="width:50%">RoomID:1234567</a>
+            <a class="ui red tag label" style="width:50%">RoomID:606118</a>
         </div>
         <div class="column">
             <a class="ui teal tag label" style="width:50%">Rand:23/666</a>
@@ -22,35 +12,57 @@
     </div>
 </div>
 
-<div class="ui grid">
-    <div class="two column row">
-        <div class="twelve wide column">
-            <img src="../static/images/background.jpg" style="width:80%">
+<div class="ui centered grid">
+            <div class="column video">
+                <video name="videoElement" class="centeredVideo" controls autoplay >
+                    Your browser is too old which doesn't support HTML5 video.
+                </video>
+                <!-- <div class="controls">
+                    <button onclick="flv_load()">Load</button>
+                    <button onclick="flv_start()">Start</button>
+                    <button onclick="flv_pause()">Pause</button>
+                    <button onclick="flv_destroy()">Destroy</button>
+                    <input style="width:100px" type="text" name="seekpoint" />
+                    <button onclick="flv_seekto()">SeekTo</button>
+                </div> -->
+            </div>
         </div>
-        <div class="four wide column">
-            <div class="ui grid">
-                <div class="column">
-                    <div class="ui raised segment">
-                        <a class="ui red ribbon label">实施用户数</a>
-                        <p>4000</p>
-                        <a class="ui blue ribbon label">实施弹幕数</a>
-                        <p>60000</p>
-                        <a class="ui green ribbon label">实时热点词</a>
-                        <p>你猜</p>
-                        <br>
-                        <p>你猜</p>
-                        <br>
-                        <p>你猜</p>
-                        <br>
-                        <p>你猜</p>
-                        <br>
-                        <p>你猜</p>
-                        <a class="ui yellow ribbon label">实时收入</a>
-                        <p>200230</p>
-                    </div>
+
+        <div class="ui two column centered grid">
+            <div class="six wide centered column">
+                <div class="ui raised segment">
+                    <a class="ui red ribbon label">实时用户数</a>
+                    <p>Account Details</p>
+                    <a class="ui blue ribbon label">实时单弹幕数</a>
+                    <p>Account Details</p>
+                    <a class="ui teal ribbon label">实时收入</a>
+                    <p>Account Details</p>
+                </div>
+            </div>
+            <div class="six wide centered column">
+                <div class="ui segment">
+                    <a class="ui orange right ribbon label">实时热词</a>
+                    <p>Account Details</p>
+                    <p>Account Details</p>
+                    <p>Account Details</p>
+                    <p>Account Details</p>
+                    <p>Account Details</p>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+
+{% endblock %}
+
+{% block css %}
+  <style>
+    .centeredVideo{
+            width: 100%;
+
+        }
+    .ui.centered.grid .column.video{
+            width: 80%;
+        }
+
+</style>
+{% endblock %}
 
