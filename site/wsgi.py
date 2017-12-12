@@ -4,7 +4,7 @@ import hashlib
 import time
 import requests
 
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, abort, url_for
 from danmu.redis import RedisClient
 from settings import MONGO_DATABASE, MONGO_URI, PAGINATE_BY
 
@@ -16,12 +16,15 @@ mongo_db = pymongo.MongoClient(MONGO_URI)[MONGO_DATABASE]
 
 @app.route('/')
 def home():
-    meta = redis_client.load_online_rid()
-    return render_template('home.html', meta=meta)
+    return render_template('home.html')
 
 
 @app.route('/room/<string:rid>')
 def live(rid):
+    lives = set(redis_client.load_online_rid())
+    if rid not in lives:
+        abort(404)
+
     return render_template('live.html', rid=rid)
 
 
@@ -39,6 +42,8 @@ def api_live(page):
     for doc in mongo_db['room'].find({'rid': {'$in': rooms}}):
         doc.pop('_id')
         doc.pop('isOnline')
+        doc['roomUrl'] = url_for('live', rid=doc['rid'])
+        doc['cateUrl'] = '/cate/%s' % doc['cid']
         meta.append(doc)
 
     return jsonify({'page_cnt': page_cnt, 'data': meta, 'code': 0, 'msg': 'success'})
@@ -55,6 +60,7 @@ def api_cate(page):
     cate = []
     for doc in mongo_db['cate'].find({}).sort([('roomCount', -1)]).skip((page - 1) * PAGINATE_BY).limit(PAGINATE_BY):
         doc.pop('_id')
+        doc['url'] = '/cate/%s' % doc['cid']
         cate.append(doc)
 
     return jsonify({'page_cnt': page_cnt, 'data': cate, 'code': 0, 'msg': 'success'})
@@ -76,6 +82,8 @@ def api_cate_room(cid, page):
             .limit(PAGINATE_BY):
         doc.pop('_id')
         doc.pop('isOnline')
+        doc['roomUrl'] = url_for('live', rid=doc['rid'])
+        doc['cateUrl'] = '/cate/%s' % doc['cid']
         meta.append(doc)
 
     return jsonify({'page_cnt': page_cnt, 'data': meta, 'code': 0, 'msg': 'success'})

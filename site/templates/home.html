@@ -28,7 +28,7 @@
                             </div>
                             <div class="info">
                                 <div class="room">
-                                    <a href="#">{{ item['roomName'] }}</a>
+                                    <a href="{{ url_for('live', rid=item['rid']) }}">{{ item['roomName'] }}</a>
                                 </div>
                                 <span>
                                    <i class="user icon" style="color: purple"></i>
