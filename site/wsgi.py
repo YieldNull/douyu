@@ -25,7 +25,7 @@ def live(rid):
     if rid not in lives:
         abort(404)
 
-    return render_template('live.html', rid=rid)
+    return render_template('room.html', rid=rid)
 
 
 @app.route('/api/live/<int:page>')
