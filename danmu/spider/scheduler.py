@@ -1,6 +1,5 @@
 import time
 import asyncio
-import logging
 import os
 import threading
 from functools import reduce
@@ -13,8 +12,6 @@ from danmu.persistence import Storage
 """
 https://yieldnull.com/blog/f9a25fe711158017f5bf82b0ab41f3dcd114bc7a/
 """
-
-logger = get_logger('Scheduler')
 
 
 class Counter(object):
@@ -114,98 +111,129 @@ class Room(object):
         self.counter.incr()
 
 
-async def process_task(queue: Queue, room, loop):
-    try:
-        await room.listen(loop)
-        room.logger.info('Task finished')
-    except Exception as e:
-        room.logger.warning('Quit room for ' + repr(e))
-    finally:
+class Scheduler(object):
+    def __init__(self):
+        self.pipes = {}
+        self.tasks = {}
+
+        self.queue = Queue()
+        self.workers = {}  # pid:wid
+
+        self.logger = get_logger('Scheduler', format_str='%(asctime)s [%(name)s] %(levelname)s : %(message)s')
+
+    def process_main(self, wid, pipe: Pipe, queue: Queue):
+        tasks = {}
+        storage = getattr(persistence, settings.STORAGE_CLASS)('Storage-{:d}'.format(wid))
+
+        def listen_pipe(looop):
+            while True:
+                is_pending, rid = pipe.recv()
+                if is_pending:
+                    room = Room('Worker-{:d}'.format(wid), rid, storage)
+                    tasks[rid] = room
+                    asyncio.run_coroutine_threadsafe(self.process_task(queue, room, looop), looop)
+
+                    room.logger.info('Received task')
+                else:
+                    tasks[rid].logger.info('Canceling task')
+                    tasks[rid].is_canceled = True
+                    tasks[rid].writer.close()
+
+        loop = asyncio.get_event_loop()
+
+        threading.Thread(target=listen_pipe, args=(loop,)).start()
+
+        loop.run_forever()
+
+    @staticmethod
+    async def process_task(queue: Queue, room, loop):
+        normal = True
         try:
-            room.writer.close()
+            await room.listen(loop)
+            room.logger.info('Task finished')
         except Exception as e:
-            room.logger.warning('Error when closing writer. ' + repr(e))
-        queue.put((os.getpid(), room.rid))
+            room.logger.warning('Quit room for ' + repr(e))
+            normal = False
+        finally:
+            try:
+                room.writer.close()
+            except Exception as e:
+                room.logger.warning('Error when closing writer. ' + repr(e))
+            queue.put((os.getpid(), room.rid, normal))
 
-
-def process_main(wid, pipe: Pipe, queue: Queue):
-    tasks = {}
-    storage = getattr(persistence, settings.STORAGE_CLASS)('Storage-{:d}'.format(wid))
-
-    def listen_pipe(looop):
+    def listen_queue(self):
         while True:
-            is_pending, rid = pipe.recv()
-            if is_pending:
-                room = Room('Worker-{:d}'.format(wid), rid, storage)
-                tasks[rid] = room
-                asyncio.run_coroutine_threadsafe(process_task(queue, room, looop), looop)
+            pid, rid, normal = self.queue.get()
+            self.logger.info('Task finished(normally:{:}). Worker-{:d} rid:{:s}.'
+                             .format(str(normal), self.workers[pid], rid))
 
-                room.logger.info('Received task: {:s}'.format(rid))
-            else:
-                tasks[rid].logger.info('Canceling task')
-                tasks[rid].is_canceled = True
-                tasks[rid].writer.close()
+            pp = self.tasks[pid]
+            pp['running'].remove(rid)
+            # pp['finished'].add(rid)
 
-    loop = asyncio.get_event_loop()
+            if not normal:
+                self.logger.info('Reschedule failed task rid:{:s}'.format(rid))
+                self.spawn_tasks([rid])
 
-    threading.Thread(target=listen_pipe, args=(loop,)).start()
-
-    loop.run_forever()
-
-
-def schedule(pcount=cpu_count(), pages=1):
-    pipes = {}
-    tasks = {}
-
-    queue = Queue()
-    for wid in range(pcount):
-        pipe, child_pipe = Pipe()
-        p = Process(target=process_main, args=(wid, child_pipe, queue))
-        p.start()
-
-        pipes[p.pid] = pipe
-        tasks[p.pid] = {
-            'running': set(),
-            # 'finished': set()
-        }
-
-    def listen_queue():
-        while True:
-            _pid, _rid = queue.get()
-            logger.info('Task finished. pid:{:d} rid:{:s}'.format(_pid, _rid))
-
-            pp = tasks[_pid]
-            pp['running'].remove(_rid)
-            # pp['finished'].add(_rid)
-
-    threading.Thread(target=listen_queue, args=()).start()
-
-    while True:
-        logger.info('Fetching latest rooms...')
-
-        targets = indexing.target_rids(pages)
-
-        pending = targets - reduce(lambda acc, x: acc | x[1]['running'], tasks.items(), set())
-
+    def spawn_tasks(self, pending):
         for rid in pending:
-            pid, _ = min(tasks.items(), key=lambda x: len(x[1]['running']))
+            pid, _ = min(self.tasks.items(), key=lambda x: len(x[1]['running']))
 
-            tasks[pid]['running'].add(rid)
+            self.tasks[pid]['running'].add(rid)
 
-            logger.info('Schedule task:{:s} to process:{:d}'.format(rid, pid))
+            self.logger.info('Schedule task:{:s} to Worker-{:d}'.format(rid, self.workers[pid]))
 
-            pipes[pid].send((True, rid))
+            self.pipes[pid].send((True, rid))
 
-        rooms = targets
+    def schedule(self, pcount=cpu_count(), pages=1):
+        threading.Thread(target=self.listen_queue, args=()).start()
 
-        for pid, v in tasks.items():
-            running = v['running']
-            for rid in running - rooms:
-                logger.info('Canceling task:{:s} in process:{:d}'.format(rid, pid))
+        for wid in range(pcount):
+            pipe, child_pipe = Pipe()
+            p = Process(target=self.process_main, args=(wid, child_pipe, self.queue))
+            p.start()
 
-                pipes[pid].send((False, rid))
+            self.pipes[p.pid] = pipe
+            self.tasks[p.pid] = {
+                'running': set(),
+                # 'finished': set()
+            }
+            self.workers[p.pid] = wid
 
-            # logger.info('pid:{:d} running:{:s} finished:{:s}'.format(pid, str(v['running']), str(v['finished'])))
-            logger.info('pid:{:d} running:{:s}'.format(pid, str(v['running'])))
+        while True:
+            self.logger.info('Fetching latest rooms...')
 
-        time.sleep(settings.INDEXING_PERIOD * 60)
+            targets = indexing.target_rids(pages)
+
+            pending = targets - reduce(lambda acc, x: acc | x[1]['running'], self.tasks.items(), set())
+
+            self.spawn_tasks(pending)
+
+            rooms = targets
+
+            for pid, v in self.tasks.items():
+                running = v['running']
+                for rid in running - rooms:
+                    self.logger.info('Canceling task:{:s} in Worker-{:d}'.format(rid, self.workers[pid]))
+
+                    self.pipes[pid].send((False, rid))
+
+                # logger.info('pid:{:d} running:{:s} finished:{:s}'.format(pid, str(v['running']), str(v['finished'])))
+                self.logger.info('Worker-{:d} running:{:s}'.format(self.workers[pid], str(v['running'])))
+
+            time.sleep(settings.INDEXING_PERIOD * 60)
+
+
+if __name__ == '__main__':
+    import sys
+    import logging
+
+
+    def excepthook(tp, value, traceback):
+        logging.exception("Uncaught exception:", exc_info=(tp, value, traceback))
+
+
+    sys.excepthook = excepthook
+
+    s = Scheduler()
+    s.schedule(pcount=int(sys.argv[1]), pages=int(sys.argv[2]))
