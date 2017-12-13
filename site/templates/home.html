@@ -20,45 +20,49 @@
         </div>
     </div>
 
-{#    <div class="ui stackable centered one column grid">#}
-        <div>
-            <ul class="pagination" id="page">
-            </ul>
-            <div class="pageJump">
-                <span>跳转到</span>
-                <input type="text"/>
-                <span>页</span>
-                <button type="button" class="button">确定</button>
-            </div>
+    {#    <div class="ui stackable centered one column grid">#}
+    <div>
+        <ul class="pagination" id="page">
+        </ul>
+        <div class="pageJump">
+            <span>跳转到</span>
+            <input type="text"/>
+            <span>页</span>
+            <button type="button" class="button">确定</button>
         </div>
-{#	</div>#}
+    </div>
+    {#	</div>#}
 {% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='semantic/pager.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/pager.css') }}">
     <style>
-        .pagination{
+        .pagination {
             position: relative;
             left: 27%;
         }
-        .pageJump{
+
+        .pageJump {
             position: relative;
             left: 27%;
         }
+
         body {
             padding: 1em;
             background: rgba(76, 79, 82, 0.07);
         }
-        .ui.stackable.five.column.grid{
+
+        .ui.stackable.five.column.grid {
             margin: auto;
-            width:80%;
+            width: 80%;
         }
-        .ui.stackable.five.column.grid .column.main{
+
+        .ui.stackable.five.column.grid .column.main {
             width: 232px;
             height: 240px;
             margin-right: 20px;
             margin-bottom: 30px;
-            padding:0px;
+            padding: 0px;
         }
 
         .ui.stackable.five.column.grid .column.main .info-continer {
@@ -80,7 +84,8 @@
             margin: 0px;
             margin-bottom: 5px;
         }
-        .ui.stackable.five.column.grid .column.main .info .room a {
+
+        .ui.stackable.five.column.grid .column.main .info .room span {
             position: relative;
             left: 5px;
             font-family: 'Roboto', sans-serif;
@@ -92,36 +97,37 @@
             position: relative;
             margin: auto;
             height: 40px;
-            top:11px;
+            top: 11px;
             bottom: 9px;
             font-size: 19px;
-            overflow:hidden;
-            text-overflow:ellipsis;
-            -o-text-overflow:ellipsis;
-            -webkit-text-overflow:ellipsis;
-            -moz-text-overflow:ellipsis;
-            white-space:nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -o-text-overflow: ellipsis;
+            -webkit-text-overflow: ellipsis;
+            -moz-text-overflow: ellipsis;
+            white-space: nowrap;
 
         }
 
-        .ui.stackable.five.column.grid .column.main .info .type, .users-num, .username,.bullets-num {
+        .ui.stackable.five.column.grid .column.main .info .type, .users-num, .username, .bullets-num {
             position: relative;
             left: 30px
         }
 
-        .ui.stackable.five.column.grid .column.main .image{
+        .ui.stackable.five.column.grid .column.main .image {
             width: 232px;
             height: 130px;
             overflow: hidden;
 
         }
-        .ui.stackable.five.column.grid .column.main .image img{
+
+        .ui.stackable.five.column.grid .column.main .image img {
             width: 232px;
-            {#height: 130px;#}
-            odject-fit:cover;
+        {#height: 130px;#} odject-fit: cover;
             border-radius: 5px 5px 0px 0px;
         }
-        .sixteen.wide.center.aligned.column a{
+
+        .sixteen.wide.center.aligned.column a {
             width: 100px;
             /* padding-left: 20px; */
             margin-bottom: 10px;
@@ -131,108 +137,92 @@
 {% endblock %}
 
 {% block script %}
-    <script src="{{ url_for('static',filename='semantic/pager.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/pager.js') }}"></script>
     <script>
-        $(function (){
+        function showItem(object) {
+            $(".ui.stackable.five.column.grid").append(
+                '<div class="column main" >' +
+                '<div class="ui link card info-continer" id="' + object.roomUrl + '">' +
+                '<div class="image">' +
+                '<img src=' + object.img + '>' +
+                '</div>' +
+                '<div class="info">' +
+                '<div class="room">' +
+                '<a href="">' + object.roomName + '</a>' +
+                '</div>' +
+                '<span>' +
+                '<i class="user icon" style="color: purple"></i>' +
+                '<span class="username">' + object.nickName + '</span>' +
+                '</span>' +
+                '<br>' +
+                '<span>' +
+                '<i class="heartbeat icon" style="color: red"></i>' +
+                '<span class="type">' + object.cate + '</span>' +
+                '</span>' +
+                '<br>' +
+                '<span>' +
+                '<i class="users icon"  style="color:darkblue"> </i>' +
+                '<span class="users-num">' + object.online + '</span>' +
+                '</span>' +
+                '</div>' +
+                '</div>' +
+                '</div>'
+            );
+
+        }
+
+        $(function () {
             $.ajax({
-                async:false,
+                async: false,
                 type: "GET",
-                url: "http://127.0.0.1:5000/api/live/1",
+                url: "/api/live/1",
                 dataType: "json",
                 success: function (page) {
                     $(".column.main").remove();
                     page_cnt = page.page_cnt;
                     $.each(page.data, function (i, object) {
-                                $(".ui.stackable.five.column.grid").append(
-                                    '<div class="column main" >' +
-                                    '<div class="ui link card info-continer" id="' + object.roomUrl + '">' +
-                                    '<div class="image">' +
-                                    '<img src=' + object.img + '>' +
-                                    '</div>' +
-                                    '<div class="info">' +
-                                    '<div class="room">' +
-                                    '<a href="">' + object.roomName + '</a>' +
-                                    '</div>' +
-                                    '<span>' +
-                                    '<i class="user icon" style="color: purple"></i>' +
-                                    '<span class="username">' + object.nickName + '</span>' +
-                                    '</span>' +
-                                    '<br>' +
-                                    '<span>' +
-                                    '<i class="heartbeat icon" style="color: red"></i>' +
-                                    '<span class="type">' + object.cate + '</span>' +
-                                    '</span>' +
-                                    '<br>' +
-                                    '<span>' +
-                                    '<i class="users icon"  style="color:darkblue"> </i>' +
-                                    '<span class="users-num">' + object.online + '</span>' +
-                                    '</span>' +
-                                    '</div>' +
-                                    '</div>' +
-                                    '</div>'
-                                );
+                        showItem(object)
 
-                            });
+                    });
                 },
-                 error: function () {
-                            alert("error");
-                        },
+                error: function () {
+                    alert("error");
+                },
             });
 
             $('.info-continer').click(function () {
                 var pn = $(this).attr("id");
                 location.href = pn;
-        });
-        Page({
-			num:487,					//页码数
-			startnum:1,				//指定页码
-			elem:$('#page'),		//指定的元素
-			callback:function(n){	//回调函数
-				$.ajax({
-                async:false,
-                type: "GET",
-                url: "http://127.0.0.1:5000/api/live/"+n,
-                dataType: "json",
-                success: function (page) {
-                    $(".column.main").remove();
-                    $.each(page.data, function (i, object) {
-                        console.log(object.roomUrl)
-                                $(".ui.stackable.five.column.grid").append(
-                                    '<div class="column main" >' +
-                                    '<div class="ui link card info-continer" id="' + object.roomUrl + '">' +
-                                    '<div class="image">' +
-                                    '<img src=' + object.img + '>' +
-                                    '</div>' +
-                                    '<div class="info">' +
-                                    '<div class="room">' +
-                                    '<a href="">' + object.roomName + '</a>' +
-                                    '</div>' +
-                                    '<span>' +
-                                    '<i class="user icon" style="color: purple"></i>' +
-                                    '<span class="username">' + object.nickName + '</span>' +
-                                    '</span>' +
-                                    '<br>' +
-                                    '<span>' +
-                                    '<i class="heartbeat icon" style="color: red"></i>' +
-                                    '<span class="type">' + object.cate + '</span>' +
-                                    '</span>' +
-                                    '<br>' +
-                                    '<span>' +
-                                    '<i class="users icon"  style="color:darkblue"> </i>' +
-                                    '<span class="users-num">' + object.online + '</span>' +
-                                    '</span>' +
-                                    '</div>' +
-                                    '</div>' +
-                                    '</div>'
-                                );
+            });
+
+            Page({
+                num: 487,					//页码数
+                startnum: 1,				//指定页码
+                elem: $('#page'),		//指定的元素
+                callback: function (n) {	//回调函数
+                    $.ajax({
+                        async: false,
+                        type: "GET",
+                        url: "/api/live/" + n,
+                        dataType: "json",
+                        success: function (page) {
+                            $(".column.main").remove();
+                            $.each(page.data, function (i, object) {
+                                showItem(object)
                             });
-                },
-                 error: function () {
+
+                            $('.info-continer').click(function () {
+                                var pn = $(this).attr("id");
+                                location.href = pn;
+                            })
+
+                        },
+                        error: function () {
                             alert("error");
                         },
+                    });
+                }
             });
-			}
-		});
         });
     </script>
 {% endblock %}

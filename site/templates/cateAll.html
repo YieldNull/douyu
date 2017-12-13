@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
     <div class="ui stackable centered five column grid">
 
@@ -21,7 +20,7 @@
 {% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='semantic/pager.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/pager.css') }}">
     <style>
         .pagination{
             position: relative;
@@ -69,13 +68,13 @@
 {% endblock %}
 
 {% block script %}
-    <script src="{{ url_for('static',filename='semantic/pager.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/pager.js') }}"></script>
     <script>
         $(function (){
             $.ajax({
                 async:false,
                 type: "GET",
-                url: "http://127.0.0.1:5000/api/cate/"+1,
+                url: "/api/cate/"+1,
                 dataType: "json",
                 success: function (page) {
                     $(".column.main").remove();
@@ -118,7 +117,7 @@
 				$.ajax({
                 async:false,
                 type: "GET",
-                url: "http://127.0.0.1:5000/api/cate/"+n,
+                url: "/api/cate/"+n,
                 dataType: "json",
                 success: function (page) {
                     $(".column.main").remove();

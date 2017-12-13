@@ -1,74 +1,85 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="ui two column centered grid">
-    <div class="four column centered row">
-        <div class="column">
-            <a class="ui red tag label" style="width:50%">RoomID:606118</a>
-        </div>
-        <div class="column">
-            <a class="ui teal tag label" style="width:50%">Rand:23/666</a>
+    <div class="ui two column centered grid">
+        <div class="four column centered row">
+            <div class="column">
+                <a class="ui red tag label" style="width:50%">RoomID:{{ rid }}</a>
+            </div>
+            <div class="column">
+                <a class="ui teal tag label" style="width:50%">Rand:23/666</a>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="ui centered grid">
-            <div class="column video">
-                <video name="videoElement" class="centeredVideo" controls autoplay >
-                    Your browser is too old which doesn't support HTML5 video.
-                </video>
-                <!-- <div class="controls">
-                    <button onclick="flv_load()">Load</button>
-                    <button onclick="flv_start()">Start</button>
-                    <button onclick="flv_pause()">Pause</button>
-                    <button onclick="flv_destroy()">Destroy</button>
-                    <input style="width:100px" type="text" name="seekpoint" />
-                    <button onclick="flv_seekto()">SeekTo</button>
-                </div> -->
+    <div class="ui centered grid">
+        <div class="column video">
+            <video id="videoElement" class="centeredVideo" height="625px" autoplay>
+                Your browser is too old which doesn't support HTML5 video.
+            </video>
+        </div>
+    </div>
+
+    <div class="ui two column centered grid">
+        <div class="six wide centered column">
+            <div class="ui raised segment">
+                <a class="ui red ribbon label">实时用户数</a>
+                <p>Account Details</p>
+                <a class="ui blue ribbon label">实时单弹幕数</a>
+                <p>Account Details</p>
+                <a class="ui teal ribbon label">实时收入</a>
+                <p>Account Details</p>
             </div>
         </div>
-
-        <div class="ui two column centered grid">
-            <div class="six wide centered column">
-                <div class="ui raised segment">
-                    <a class="ui red ribbon label">实时用户数</a>
-                    <p>Account Details</p>
-                    <a class="ui blue ribbon label">实时单弹幕数</a>
-                    <p>Account Details</p>
-                    <a class="ui teal ribbon label">实时收入</a>
-                    <p>Account Details</p>
-                </div>
-            </div>
-            <div class="six wide centered column">
-                <div class="ui segment">
-                    <a class="ui orange right ribbon label">实时热词</a>
-                    <p>Account Details</p>
-                    <p>Account Details</p>
-                    <p>Account Details</p>
-                    <p>Account Details</p>
-                    <p>Account Details</p>
-                </div>
+        <div class="six wide centered column">
+            <div class="ui segment">
+                <a class="ui orange right ribbon label">实时热词</a>
+                <p>Account Details</p>
+                <p>Account Details</p>
+                <p>Account Details</p>
+                <p>Account Details</p>
+                <p>Account Details</p>
             </div>
         </div>
+    </div>
 
 {% endblock %}
 
 {% block css %}
-  <style>
-    .centeredVideo{
+    <style>
+        .centeredVideo {
             width: 100%;
 
         }
-    .ui.centered.grid .column.video{
-            width: 80%;
+
+        .ui.centered.grid .column.video {
+
         }
 
-</style>
+    </style>
 {% endblock %}
 
 {% block script %}
+    <script src="{{ url_for('static',filename='js/flv.min.js') }}"></script>
+
     <script>
-        console.log(rid);
+        $(function () {
+            $.getJSON("/api/stream/{{ rid }}", function (data) {
+                console.log(data);
+
+                if (data.code === 0 && flvjs.isSupported()) {
+                    var videoElement = document.getElementById('videoElement');
+                    var flvPlayer = flvjs.createPlayer({
+                        type: 'flv',
+                        isLive: true,
+                        url: data.url // http://tc-tct.douyucdn.cn/dyliveflv1a
+                    });
+                    flvPlayer.attachMediaElement(videoElement);
+                    flvPlayer.load();
+                    flvPlayer.play();
+                }
+            })
+        })
     </script>
 
 {% endblock %}

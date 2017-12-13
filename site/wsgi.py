@@ -16,9 +16,6 @@ mongo_db = pymongo.MongoClient(MONGO_URI)[MONGO_DATABASE]
 def home():
     return render_template('home.html')
 
-@app.route('/cate_all')
-def cate_aLl():
-    return render_template('cateAll.html')
 
 @app.route('/room/<string:rid>')
 def live(rid):
@@ -28,13 +25,20 @@ def live(rid):
 
     return render_template('room.html', rid=rid)
 
+
+@app.route('/cate/')
+def cate_index():
+    return render_template('cateAll.html')
+
+
 @app.route('/cate/<string:cid>')
-def cate(cid):
-    cates = set(redis_client.load_online_rid())
-    if cid not in cates:
+def cate_detail(cid):
+    count = mongo_db['cate'].find({'cid': cid}).count()
+    if count < 0:
         abort(404)
 
     return render_template('cate.html', cid=cid)
+
 
 @app.route('/api/live/<int:page>')
 def api_live(page):
@@ -112,6 +116,9 @@ def api_stream(rid):
         auth_str = hashlib.md5(auth_md5).hexdigest()
         json_request_url = "%s%s&auth=%s" % (api_url, args, auth_str)
 
+
+        # print(requests.get(json_request_url).content.decode('gb2312'))
+
         json_content = requests.get(json_request_url).json()
         data = json_content['data']
         server_status = json_content.get('error', 0)
@@ -124,10 +131,12 @@ def api_stream(rid):
 
         return data.get('rtmp_url') + '/' + data.get('rtmp_live')
 
-    try:
-        return jsonify({'code': 0, 'msg': 'success', 'url': get_url(rid)})
-    except Exception as e:
-        return jsonify({'code': 1, 'msg': str(e)})
+    return jsonify({'code': 0, 'msg': 'success', 'url': get_url(rid)})
+
+    # try:
+    #     return jsonify({'code': 0, 'msg': 'success', 'url': get_url(rid)})
+    # except Exception as e:
+    #     return jsonify({'code': 1, 'msg': str(e)})
 
 
 if __name__ == '__main__':
