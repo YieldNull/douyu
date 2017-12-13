@@ -135,6 +135,7 @@
     <script>
         $(function (){
             $.ajax({
+                async:false,
                 type: "GET",
                 url: "http://127.0.0.1:5000/api/live/1",
                 dataType: "json",
@@ -177,6 +178,10 @@
                             alert("error");
                         },
             });
+
+            $('.info-continer').click(function () {
+                var pn = $(this).attr("id");
+                location.href = pn;
         });
         Page({
 			num:487,					//页码数
@@ -184,6 +189,7 @@
 			elem:$('#page'),		//指定的元素
 			callback:function(n){	//回调函数
 				$.ajax({
+                async:false,
                 type: "GET",
                 url: "http://127.0.0.1:5000/api/live/"+n,
                 dataType: "json",
@@ -227,9 +233,6 @@
             });
 			}
 		});
-        $('.info-continer').click(function () {
-            var pn = this.attr("id");
-            location.href = pn;
-        })
+        });
     </script>
 {% endblock %}

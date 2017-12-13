@@ -73,6 +73,7 @@
     <script>
         $(function (){
             $.ajax({
+                async:false,
                 type: "GET",
                 url: "http://127.0.0.1:5000/api/cate/"+1,
                 dataType: "json",
@@ -105,9 +106,9 @@
             });
 
             $('.info-continer').click(function () {
-                var pn = this.attr("id");
+                var pn = $(this).attr("id");
                 location.href = pn;
-        })
+            });
         });
         Page({
 			num:8,					//页码数
@@ -115,6 +116,7 @@
 			elem:$('#page'),		//指定的元素
 			callback:function(n){	//回调函数
 				$.ajax({
+                async:false,
                 type: "GET",
                 url: "http://127.0.0.1:5000/api/cate/"+n,
                 dataType: "json",
