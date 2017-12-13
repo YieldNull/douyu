@@ -2,8 +2,6 @@
 
 
 {% block content %}
-
-
     <div class="ui stackable centered five column grid">
         <div class="sixteen wide center aligned column">
             <a class="ui red label">全部</a>
@@ -20,41 +18,33 @@
                 <a class="ui grey label">灰色</a>
                 <a class="ui black label">Black</a> -->
         </div>
-                {% for item in meta %}
-                    <div class="column main">
-                        <div class="ui link card info-continer">
-                            <div class="image">
-                                <img src="{{ item['img'] }}">
-                            </div>
-                            <div class="info">
-                                <div class="room">
-                                    <a href="{{ url_for('live', rid=item['rid']) }}">{{ item['roomName'] }}</a>
-                                </div>
-                                <span>
-                                   <i class="user icon" style="color: purple"></i>
-                                   <span class="username">{{ item['nickName'] }}</span>
-                                </span>
-                                <br>
-                                <span>
-                                    <i class="heartbeat icon" style="color: red"></i>
-                                    <span class="type">{{ item['cate'] }}</span>
-                                </span>
-                                <br>
-                                <span>
-                                    <i class="users icon"  style="color:darkblue"> </i>
-                                    <span class="users-num">{{ item['online'] }}</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-
     </div>
 
+{#    <div class="ui stackable centered one column grid">#}
+        <div>
+            <ul class="pagination" id="page">
+            </ul>
+            <div class="pageJump">
+                <span>跳转到</span>
+                <input type="text" value="3"/>
+                <span>页</span>
+                <button type="button" class="button">确定</button>
+            </div>
+        </div>
+{#	</div>#}
 {% endblock %}
 
 {% block css %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='semantic/pager.css') }}">
     <style>
+        .pagination{
+            position: relative;
+            left: 27%;
+        }
+        .pageJump{
+            position: relative;
+            left: 27%;
+        }
         body {
             padding: 1em;
             background: rgba(76, 79, 82, 0.07);
@@ -134,7 +124,108 @@
         .sixteen.wide.center.aligned.column a{
             width: 100px;
             /* padding-left: 20px; */
+            margin-bottom: 10px;
         }
 
     </style>
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static',filename='semantic/pager.js') }}"></script>
+
+    <script>
+        $(function (){
+            $.ajax({
+                type: "GET",
+                url: "http://127.0.0.1:5000/api/live/1",
+                dataType: "json",
+                success: function (page) {
+                    $(".column.main").remove();
+                    page_cnt = page.page_cnt;
+                    $.each(page.data, function (i, object) {
+                                $(".ui.stackable.five.column.grid").append(
+                                    '<div class="column main">' +
+                                    '<div class="ui link card info-continer">' +
+                                    '<div class="image">' +
+                                    '<img src=' + object.img + '>' +
+                                    '</div>' +
+                                    '<div class="info">' +
+                                    '<div class="room">' +
+                                    '<a href="">' + object.roomName + '</a>' +
+                                    '</div>' +
+                                    '<span>' +
+                                    '<i class="user icon" style="color: purple"></i>' +
+                                    '<span class="username">' + object.nickName + '</span>' +
+                                    '</span>' +
+                                    '<br>' +
+                                    '<span>' +
+                                    '<i class="heartbeat icon" style="color: red"></i>' +
+                                    '<span class="type">' + object.cate + '</span>' +
+                                    '</span>' +
+                                    '<br>' +
+                                    '<span>' +
+                                    '<i class="users icon"  style="color:darkblue"> </i>' +
+                                    '<span class="users-num">' + object.online + '</span>' +
+                                    '</span>' +
+                                    '</div>' +
+                                    '</div>' +
+                                    '</div>'
+                                );
+                            });
+                },
+                 error: function () {
+                            alert("error");
+                        },
+            });
+        });
+        Page({
+			num:487,					//页码数
+			startnum:1,				//指定页码
+			elem:$('#page'),		//指定的元素
+			callback:function(n){	//回调函数
+				$.ajax({
+                type: "GET",
+                url: "http://127.0.0.1:5000/api/live/"+n,
+                dataType: "json",
+                success: function (page) {
+                    $(".column.main").remove();
+                    page_cnt = page.page_cnt;
+                    $.each(page.data, function (i, object) {
+                                $(".ui.stackable.five.column.grid").append(
+                                    '<div class="column main">' +
+                                    '<div class="ui link card info-continer">' +
+                                    '<div class="image">' +
+                                    '<img src=' + object.img + '>' +
+                                    '</div>' +
+                                    '<div class="info">' +
+                                    '<div class="room">' +
+                                    '<a href="">' + object.roomName + '</a>' +
+                                    '</div>' +
+                                    '<span>' +
+                                    '<i class="user icon" style="color: purple"></i>' +
+                                    '<span class="username">' + object.nickName + '</span>' +
+                                    '</span>' +
+                                    '<br>' +
+                                    '<span>' +
+                                    '<i class="heartbeat icon" style="color: red"></i>' +
+                                    '<span class="type">' + object.cate + '</span>' +
+                                    '</span>' +
+                                    '<br>' +
+                                    '<span>' +
+                                    '<i class="users icon"  style="color:darkblue"> </i>' +
+                                    '<span class="users-num">' + object.online + '</span>' +
+                                    '</span>' +
+                                    '</div>' +
+                                    '</div>' +
+                                    '</div>'
+                                );
+                            });
+                },
+                 error: function () {
+                            alert("error");
+                        },
+            });
+			}
+		});
+    </script>
 {% endblock %}

@@ -5,9 +5,8 @@
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='semantic/semantic.min.css') }}">
-
     <title>
         {% block title %}
         {% endblock %} | 直播弹幕大数据分析
@@ -21,7 +20,8 @@
         .ui.menu {
             /* margin: 3em 0em; */
             width: 80%;
-            margin: auto;
+            position: relative;
+            left: 10%;
             background: image("{{ url_for('static',filename='images/header.psd') }}")
         }
 
@@ -31,7 +31,7 @@
 
         .maincontent {
             position: relative;
-            top: 5%;
+            {#top: 2%;#}
         }
 
     </style>
@@ -69,7 +69,7 @@
 
 <script src="{{ url_for('static',filename='semantic/jquery.min.js') }}"></script>
 <script src="{{ url_for('static',filename='semantic/semantic.min.js') }}"></script>
-<script src="{{ url_for('static',filename='js/base.js') }}"></script>
+
 {% block script %}
 {% endblock %}
 </body>
