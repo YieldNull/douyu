@@ -16,6 +16,9 @@ mongo_db = pymongo.MongoClient(MONGO_URI)[MONGO_DATABASE]
 def home():
     return render_template('home.html')
 
+@app.route('/cate_all')
+def cate_aLl():
+    return render_template('cateAll.html')
 
 @app.route('/room/<string:rid>')
 def live(rid):
@@ -25,6 +28,13 @@ def live(rid):
 
     return render_template('room.html', rid=rid)
 
+@app.route('/cate/<string:cid>')
+def cate(cid):
+    cates = set(redis_client.load_online_rid())
+    if cid not in cates:
+        abort(404)
+
+    return render_template('cate.html', cid=cid)
 
 @app.route('/api/live/<int:page>')
 def api_live(page):

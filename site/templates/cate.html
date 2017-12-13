@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
     <div class="ui stackable centered five column grid">
         <div class="sixteen wide center aligned column">
@@ -135,7 +134,6 @@
     <script>
         $(function (){
             $.ajax({
-                async:false,
                 type: "GET",
                 url: "http://127.0.0.1:5000/api/live/1",
                 dataType: "json",
@@ -144,8 +142,8 @@
                     page_cnt = page.page_cnt;
                     $.each(page.data, function (i, object) {
                                 $(".ui.stackable.five.column.grid").append(
-                                    '<div class="column main" >' +
-                                    '<div class="ui link card info-continer" id="' + object.roomUrl + '">' +
+                                    '<div class="column main">' +
+                                    '<div class="ui link card info-continer">' +
                                     '<div class="image">' +
                                     '<img src=' + object.img + '>' +
                                     '</div>' +
@@ -171,7 +169,6 @@
                                     '</div>' +
                                     '</div>'
                                 );
-
                             });
                 },
                  error: function () {
@@ -179,9 +176,6 @@
                         },
             });
 
-            $('.info-continer').click(function () {
-                var pn = $(this).attr("id");
-                location.href = pn;
         });
         Page({
 			num:487,					//页码数
@@ -189,40 +183,39 @@
 			elem:$('#page'),		//指定的元素
 			callback:function(n){	//回调函数
 				$.ajax({
-                async:false,
                 type: "GET",
                 url: "http://127.0.0.1:5000/api/live/"+n,
                 dataType: "json",
                 success: function (page) {
                     $(".column.main").remove();
                     $.each(page.data, function (i, object) {
-                        console.log(object.roomUrl)
+                        {#if(object.cid==id)#}
                                 $(".ui.stackable.five.column.grid").append(
-                                    '<div class="column main" >' +
-                                    '<div class="ui link card info-continer" id="' + object.roomUrl + '">' +
-                                    '<div class="image">' +
-                                    '<img src=' + object.img + '>' +
-                                    '</div>' +
-                                    '<div class="info">' +
-                                    '<div class="room">' +
-                                    '<a href="">' + object.roomName + '</a>' +
-                                    '</div>' +
-                                    '<span>' +
-                                    '<i class="user icon" style="color: purple"></i>' +
-                                    '<span class="username">' + object.nickName + '</span>' +
-                                    '</span>' +
-                                    '<br>' +
-                                    '<span>' +
-                                    '<i class="heartbeat icon" style="color: red"></i>' +
-                                    '<span class="type">' + object.cate + '</span>' +
-                                    '</span>' +
-                                    '<br>' +
-                                    '<span>' +
-                                    '<i class="users icon"  style="color:darkblue"> </i>' +
-                                    '<span class="users-num">' + object.online + '</span>' +
-                                    '</span>' +
-                                    '</div>' +
-                                    '</div>' +
+                                    '<div class="column main" id="' + object.roomUrl + '>' +
+                                        '<div class="ui link card info-continer">' +
+                                            '<div class="image">' +
+                                                '<img src=' + object.img + '>' +
+                                            '</div>' +
+                                            '<div class="info">' +
+                                            '<div class="room">' +
+                                            '<a href="">' + object.roomName + '</a>' +
+                                            '</div>' +
+                                            '<span>' +
+                                            '<i class="user icon" style="color: purple"></i>' +
+                                            '<span class="username">' + object.nickName + '</span>' +
+                                            '</span>' +
+                                            '<br>' +
+                                            '<span>' +
+                                            '<i class="heartbeat icon" style="color: red"></i>' +
+                                            '<span class="type">' + object.cate + '</span>' +
+                                            '</span>' +
+                                            '<br>' +
+                                            '<span>' +
+                                            '<i class="users icon"  style="color:darkblue"> </i>' +
+                                            '<span class="users-num">' + object.online + '</span>' +
+                                            '</span>' +
+                                            '</div>' +
+                                        '</div>' +
                                     '</div>'
                                 );
                             });
@@ -233,6 +226,6 @@
             });
 			}
 		});
-        });
+
     </script>
 {% endblock %}

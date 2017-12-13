@@ -5,9 +5,8 @@
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='semantic/semantic.min.css') }}">
-
     <title>
         {% block title %}
         {% endblock %} | 直播弹幕大数据分析
@@ -16,12 +15,13 @@
     <style>
         body {
             padding: 1em;
+            background: rgba(76, 79, 82, 0.07);
         }
-
         .ui.menu {
             /* margin: 3em 0em; */
             width: 80%;
-            margin: auto;
+            position: relative;
+            left: 10%;
             background: image("{{ url_for('static',filename='images/header.psd') }}")
         }
 
@@ -31,7 +31,7 @@
 
         .maincontent {
             position: relative;
-            top: 5%;
+            {#top: 2%;#}
         }
 
     </style>
@@ -43,8 +43,8 @@
 
 <div class="ui menu">
     <img src="{{ url_for('static',filename='images/small-logo.png') }}" class="logo-image ui image">
-    <a id="homepage" class="item active"><h3 style="display:inline">主页</h3></a>
-    <a id="live" class="item"><h3 style="display:inline">直播</h3></a>
+    <a id="homepage" class="item"><h3 style="display:inline">主页</h3></a>
+    <a id="cate" class="item"><h3 style="display:inline">分类</h3></a>
     <a class="item"><h3 style="display:inline">排行榜</h3></a>
     <a class="item"><h3 style="display:inline">统计</h3></a>
     <a id="graph" class="item"><h3 style="display:inline">图数据</h3></a>
@@ -69,8 +69,17 @@
 
 <script src="{{ url_for('static',filename='semantic/jquery.min.js') }}"></script>
 <script src="{{ url_for('static',filename='semantic/semantic.min.js') }}"></script>
-<script src="{{ url_for('static',filename='js/base.js') }}"></script>
+<script>
+    $("#homepage").click(function () {
+           location.href = "/";
+          });
+
+    $("#cate").click(function () {
+           location.href = "/cate_all";
+          });
+</script>
 {% block script %}
+
 {% endblock %}
 </body>
 </html>
