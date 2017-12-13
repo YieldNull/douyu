@@ -106,4 +106,3 @@ class FileStorage(Storage):
     def close(self):
         if self.fp is not None:
             self.fp.close()
-        self.producer.close()

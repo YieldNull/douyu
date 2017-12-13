@@ -2,7 +2,6 @@ import logging
 import pymongo
 from metaspider.items import RoomItem, CateItem, CateCountItem
 from metaspider.spiders.metadata import LiveSpider
-from danmu.redis import RedisClient
 
 
 class MetadataPipeline(object):
@@ -29,12 +28,12 @@ class MetadataPipeline(object):
             self.mongo_db['room'].update_many({}, {'$set': {'isOnline': False}})
             self.mongo_db['room'].update_many({'rid': {'$in': list(self.online)}}, {'$set': {'isOnline': True}})
 
-            sorted_rids = [doc['rid'] for doc in
-                           self.mongo_db['room']
-                               .find(filter={'isOnline': True}, projection=['rid'], sort=[('online', -1)])]
-
-            redis_client = RedisClient()
-            redis_client.save_online_rid(sorted_rids)
+            # sorted_rids = [doc['rid'] for doc in
+            #                self.mongo_db['room']
+            #                    .find(filter={'isOnline': True}, projection=['rid'], sort=[('online', -1)])]
+            #
+            # redis_client = RedisClient()
+            # redis_client.save_online_rid(sorted_rids)
 
         self.mongo_client.close()
 

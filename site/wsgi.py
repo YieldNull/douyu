@@ -5,12 +5,10 @@ import time
 import requests
 
 from flask import Flask, render_template, jsonify, abort, url_for
-from danmu.redis import RedisClient
 from settings import MONGO_DATABASE, MONGO_URI, PAGINATE_BY
 
 app = Flask(__name__)
 
-redis_client = RedisClient()
 mongo_db = pymongo.MongoClient(MONGO_URI)[MONGO_DATABASE]
 
 
@@ -21,8 +19,8 @@ def home():
 
 @app.route('/room/<string:rid>')
 def live(rid):
-    lives = set(redis_client.load_online_rid())
-    if rid not in lives:
+    c = mongo_db['room'].find({'rid': rid, 'isOnline': True}).count()
+    if c == 0:
         abort(404)
 
     return render_template('room.html', rid=rid)
@@ -30,16 +28,17 @@ def live(rid):
 
 @app.route('/api/live/<int:page>')
 def api_live(page):
-    rids = redis_client.load_online_rid()
-    page_cnt = math.ceil(len(rids) / PAGINATE_BY)
+    count = mongo_db['room'].find({'isOnline': True}).count()
+    page_cnt = math.ceil(count / PAGINATE_BY)
 
     if page < 0 or page > page_cnt:
         return jsonify({'code': 1, 'msg': 'No such page'})
 
-    rooms = rids[PAGINATE_BY * (page - 1):PAGINATE_BY * page]
-
     meta = []
-    for doc in mongo_db['room'].find({'rid': {'$in': rooms}}):
+    for doc in mongo_db['room'].find({'isOnline': True}) \
+            .sort([('online', -1)]) \
+            .skip((page - 1) * PAGINATE_BY) \
+            .limit(PAGINATE_BY):
         doc.pop('_id')
         doc.pop('isOnline')
         doc['roomUrl'] = url_for('live', rid=doc['rid'])
