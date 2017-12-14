@@ -2,21 +2,7 @@
 
 {% block content %}
     <div class="ui stackable centered five column grid">
-        <div class="sixteen wide center aligned column">
-            <a class="ui red label">全部</a>
-            <a class="ui orange label">热门游戏</a>
-            <a class="ui yellow label">王者荣耀</a>
-            <a class="ui olive label">客厅游戏</a>
-            <a class="ui green label">炉石传说</a>
-            <a class="ui teal label">唱歌</a>
-            <a class="ui blue label">科技</a>
-            <a class="ui violet label">搞笑</a>
-            <!-- <a class="ui purple label">紫色</a>
-                <a class="ui pink label">粉色</a>
-                <a class="ui brown label">褐色</a>
-                <a class="ui grey label">灰色</a>
-                <a class="ui black label">Black</a> -->
-        </div>
+
     </div>
 
     {#    <div class="ui stackable centered one column grid">#}
@@ -126,11 +112,6 @@
             border-radius: 5px 5px 0px 0px;
         }
 
-        .sixteen.wide.center.aligned.column a {
-            width: 100px;
-            /* padding-left: 20px; */
-            margin-bottom: 10px;
-        }
 
     </style>
 {% endblock %}
@@ -138,17 +119,16 @@
 {% block script %}
     <script src="{{ url_for('static',filename='js/pager.js') }}"></script>
     <script>
-
-        function showItem(object) {
+        function showCateRoomItem(object) {
             $(".ui.stackable.five.column.grid").append(
-                '<div class="column main">' +
-                '<div class="ui link card info-continer">' +
+                '<div class="column main" >' +
+                '<div class="ui link card info-continer" id="' + object.roomUrl + '">' +
                 '<div class="image">' +
                 '<img src=' + object.img + '>' +
                 '</div>' +
                 '<div class="info">' +
                 '<div class="room">' +
-                '<a href="">' + object.roomName + '</a>' +
+                '<span>' + object.roomName + '</span>' +
                 '</div>' +
                 '<span>' +
                 '<i class="user icon" style="color: purple"></i>' +
@@ -167,20 +147,56 @@
                 '</div>' +
                 '</div>' +
                 '</div>'
-            )
+            );
+            $('.info-continer').click(function () {
+                var url = $(this).attr("id");
+                location.href = url;
+            });
+        }
+
+        function init_page(cnt) {
+            Page({
+                num: cnt,					//页码数
+                startnum: 1,				//指定页码
+                elem: $('#page'),		//指定的元素
+                callback: function (n) {	//回调函数
+                    $.ajax({
+                        async: false,
+                        type: "GET",
+                        url: "/api/cate_room/{{ cid }}/" + n,
+                        dataType: "json",
+                        success: function (page) {
+                            $(".column.main").remove();
+                            $.each(page.data, function (i, object) {
+                                showCateRoomItem(object);
+                            });
+
+                            $('.info-continer').click(function () {
+                                var url = $(this).attr("id");
+                                location.href = url;
+                            })
+                        },
+                        error: function () {
+                            alert("error");
+                        },
+                    });
+                }
+            });
         }
 
         $(function () {
+            {#var page_cnt=0;#}
             $.ajax({
+                async: false,
                 type: "GET",
-                url: "/api/live/1",
+                url: "/api/cate_room/{{ cid }}/1",
                 dataType: "json",
                 success: function (page) {
                     $(".column.main").remove();
-                    page_cnt = page.page_cnt;
                     $.each(page.data, function (i, object) {
-                        showItem(object)
+                        showCateRoomItem(object);
                     });
+                    init_page(page.page_cnt);
                 },
                 error: function () {
                     alert("error");
@@ -188,33 +204,7 @@
             });
 
         });
-        Page({
-            num: 487,					//页码数
-            startnum: 1,				//指定页码
-            elem: $('#page'),		//指定的元素
-            callback: function (n) {	//回调函数
-                $.ajax({
-                    type: "GET",
-                    url: "/api/live/" + n,
-                    dataType: "json",
-                    success: function (page) {
-                        $(".column.main").remove();
-                        $.each(page.data, function (i, object) {
-                            {#if(object.cid==id)#}
-                            showItem(object)
-                        });
 
-                        $('.info-continer').click(function () {
-                            var pn = $(this).attr("id");
-                            location.href = pn;
-                        })
-                    },
-                    error: function () {
-                        alert("error");
-                    },
-                });
-            }
-        });
 
     </script>
 {% endblock %}

@@ -139,7 +139,9 @@
 {% block script %}
     <script src="{{ url_for('static',filename='js/pager.js') }}"></script>
     <script>
-        function showItem(object) {
+        var page_cnt = 0;
+
+        function showRoomItem(object) {
             $(".ui.stackable.five.column.grid").append(
                 '<div class="column main" >' +
                 '<div class="ui link card info-continer" id="' + object.roomUrl + '">' +
@@ -148,7 +150,7 @@
                 '</div>' +
                 '<div class="info">' +
                 '<div class="room">' +
-                '<a href="">' + object.roomName + '</a>' +
+                '<span>' + object.roomName + '</span>' +
                 '</div>' +
                 '<span>' +
                 '<i class="user icon" style="color: purple"></i>' +
@@ -178,10 +180,11 @@
                 url: "/api/live/1",
                 dataType: "json",
                 success: function (page) {
-                    $(".column.main").remove();
+                    {#$(".column.main").remove();#}
                     page_cnt = page.page_cnt;
+                    console.log("home里" + page_cnt);
                     $.each(page.data, function (i, object) {
-                        showItem(object)
+                        showRoomItem(object)
 
                     });
                 },
@@ -191,12 +194,12 @@
             });
 
             $('.info-continer').click(function () {
-                var pn = $(this).attr("id");
-                location.href = pn;
+                var url = $(this).attr("id");
+                location.href = url;
             });
-
+            console.log("home" + page_cnt);
             Page({
-                num: 487,					//页码数
+                num: page_cnt,					//页码数
                 startnum: 1,				//指定页码
                 elem: $('#page'),		//指定的元素
                 callback: function (n) {	//回调函数
@@ -208,14 +211,13 @@
                         success: function (page) {
                             $(".column.main").remove();
                             $.each(page.data, function (i, object) {
-                                showItem(object)
+                                showRoomItem(object)
                             });
 
                             $('.info-continer').click(function () {
-                                var pn = $(this).attr("id");
-                                location.href = pn;
+                                var url = $(this).attr("id");
+                                location.href = url;
                             })
-
                         },
                         error: function () {
                             alert("error");

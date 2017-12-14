@@ -5,34 +5,36 @@
 
     </div>
 
-{#    <div class="ui stackable centered one column grid">#}
-        <div>
-            <ul class="pagination" id="page">
-            </ul>
-            <div class="pageJump">
-                <span>跳转到</span>
-                <input type="text"/>
-                <span>页</span>
-                <button type="button" class="button">确定</button>
-            </div>
+    {#    <div class="ui stackable centered one column grid">#}
+    <div>
+        <ul class="pagination" id="page">
+        </ul>
+        <div class="pageJump">
+            <span>跳转到</span>
+            <input type="text"/>
+            <span>页</span>
+            <button type="button" class="button">确定</button>
         </div>
-{#	</div>#}
+    </div>
+    {#	</div>#}
 {% endblock %}
 
 {% block css %}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/pager.css') }}">
     <style>
-        .pagination{
+        .pagination {
             position: relative;
             left: 27%;
         }
-        .pageJump{
+
+        .pageJump {
             position: relative;
             left: 27%;
         }
-        .ui.stackable.five.column.grid{
+
+        .ui.stackable.five.column.grid {
             margin: auto;
-            width:80%;
+            width: 80%;
         }
 
         .ui.stackable.five.column.grid .column.main .info-continer {
@@ -43,20 +45,22 @@
             cursor: pointer;
         }
 
-        .ui.stackable.five.column.grid .column.main .info-continer{
+        .ui.stackable.five.column.grid .column.main .info-continer {
             background: white;
         }
 
-        .ui.stackable.five.column.grid .column.main img{
+        .ui.stackable.five.column.grid .column.main img {
             width: 100%;
 
             border-radius: 5px 5px 0px 0px;
         }
-        .ui.stackable.five.column.grid .column.main .info{
+
+        .ui.stackable.five.column.grid .column.main .info {
             margin: auto;
             color: grey;
 
         }
+
         .ui.stackable.five.column.grid .column.main .info .cate a {
 
             font-family: 'Roboto', sans-serif;
@@ -70,84 +74,82 @@
 {% block script %}
     <script src="{{ url_for('static',filename='js/pager.js') }}"></script>
     <script>
-        $(function (){
+        function showCateItem(object) {
+            $(".ui.stackable.five.column.grid").append(
+                '<div class="column main">' +
+                '<div class="ui link card info-continer" id="' + object.url + '">' +
+                {#'<div class="image">' +#}
+                '<img src=' + object.img + '>' +
+                {#'</div>' +#}
+                '<div class="info">' +
+                '<div class="cate">' +
+                '<a href="">' + object.name + '</a>' +
+                '</div>' +
+                '<span>' +
+                '<i class="toggle right icon" style="color: black"></i>' +
+                '<span class="type">' + object.roomCount + '</span>' +
+                '</span>' +
+                '</div>' +
+                '</div>' +
+                '</div>'
+            );
+            $('.info-continer').click(function () {
+                var url = $(this).attr("id");
+                location.href = url;
+            });
+        }
+
+        function init_page(cnt) {
+            Page({
+                num: cnt,					//页码数
+                startnum: 1,				//指定页码
+                elem: $('#page'),		//指定的元素
+                callback: function (n) {	//回调函数
+                    $.ajax({
+                        async: false,
+                        type: "GET",
+                        async: false,
+                        url: "/api/cate/" + n,
+                        dataType: "json",
+                        success: function (page) {
+                            $(".column.main").remove();
+                            $.each(page.data, function (i, object) {
+                                showCateItem(object);
+                            });
+                            $('.info-continer').click(function () {
+                                var url = $(this).attr("id");
+                                location.href = url;
+                            });
+                        },
+                        error: function () {
+                            alert("error");
+                        },
+                    });
+                }
+            });
+        }
+
+        $(function () {
             $.ajax({
-                async:false,
                 type: "GET",
-                url: "/api/cate/"+1,
+                url: "/api/cate/1",
+                async: false,
                 dataType: "json",
                 success: function (page) {
                     $(".column.main").remove();
                     $.each(page.data, function (i, object) {
-                                $(".ui.stackable.five.column.grid").append(
-                                    '<div class="column main">' +
-                                        '<div class="ui link card info-continer" id="' + object.url + '">' +
-                                            {#'<div class="image">' +#}
-                                            '<img src=' + object.img + '>' +
-                                            {#'</div>' +#}
-                                            '<div class="info">' +
-                                                '<div class="cate">' +
-                                                    '<a href="">' + object.name + '</a>' +
-                                                '</div>' +
-                                                '<span>' +
-                                                    '<i class="toggle right icon" style="color: black"></i>' +
-                                                    '<span class="type">' + object.roomCount + '</span>' +
-                                                '</span>' +
-                                            '</div>' +
-                                        '</div>' +
-                                    '</div>'
-                                );
-                            });
+                        showCateItem(object);
+                    });
+                    init_page(page.page_cnt);
                 },
-                 error: function () {
-                            alert("error");
-                        },
+                error: function () {
+                    alert("error");
+                },
             });
 
-            $('.info-continer').click(function () {
-                var pn = $(this).attr("id");
-                location.href = pn;
-            });
+
         });
-        Page({
-			num:8,					//页码数
-			startnum:1,				//指定页码
-			elem:$('#page'),		//指定的元素
-			callback:function(n){	//回调函数
-				$.ajax({
-                async:false,
-                type: "GET",
-                url: "/api/cate/"+n,
-                dataType: "json",
-                success: function (page) {
-                    $(".column.main").remove();
-                    $.each(page.data, function (i, object) {
-                                $(".ui.stackable.five.column.grid").append(
-                                    '<div class="column main">' +
-                                        '<div class="ui link card info-continer" id="' + object.url + '">' +
-                                            {#'<div class="image">' +#}
-                                                '<img src=' + object.img + '>' +
-                                            {#'</div>' +#}
-                                            '<div class="info">' +
-                                                '<div class="cate">' +
-                                                    '<a href="">' + object.name + '</a>' +
-                                                '</div>' +
-                                                '<span>' +
-                                                    '<i class="toggle right icon" style="color: black">' +
-                                                    '<span class="type">' + object.roomCount + '</span>' +
-                                                '</span>' +
-                                            '</div>' +
-                                        '</div>' +
-                                    '</div>'
-                                )
-                            });
-                },
-                 error: function () {
-                            alert("error");
-                        },
-            });
-			}
-		});
+
 
     </script>
 {% endblock %}
