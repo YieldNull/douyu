@@ -116,9 +116,6 @@ def api_stream(rid):
         auth_str = hashlib.md5(auth_md5).hexdigest()
         json_request_url = "%s%s&auth=%s" % (api_url, args, auth_str)
 
-
-        # print(requests.get(json_request_url).content.decode('gb2312'))
-
         json_content = requests.get(json_request_url).json()
         data = json_content['data']
         server_status = json_content.get('error', 0)
@@ -131,12 +128,10 @@ def api_stream(rid):
 
         return data.get('rtmp_url') + '/' + data.get('rtmp_live')
 
-    return jsonify({'code': 0, 'msg': 'success', 'url': get_url(rid)})
-
-    # try:
-    #     return jsonify({'code': 0, 'msg': 'success', 'url': get_url(rid)})
-    # except Exception as e:
-    #     return jsonify({'code': 1, 'msg': str(e)})
+    try:
+        return jsonify({'code': 0, 'msg': 'success', 'url': get_url(rid)})
+    except Exception as e:
+        return jsonify({'code': 1, 'msg': str(e)})
 
 
 if __name__ == '__main__':

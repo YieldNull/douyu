@@ -14,9 +14,15 @@
 
     <div class="ui centered grid">
         <div class="column video">
-            <video id="videoElement" class="centeredVideo" height="625px" autoplay>
-                Your browser is too old which doesn't support HTML5 video.
-            </video>
+            <div class="screen">
+                <div class="s_dm">
+                    <div class="s_show">
+                        <video id="videoElement" class="centeredVideo" height="625px" autoplay>
+                            Your browser is too old which doesn't support HTML5 video.
+                        </video>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -45,22 +51,11 @@
 
 {% endblock %}
 
-{% block css %}
-    <style>
-        .centeredVideo {
-            width: 100%;
-
-        }
-
-        .ui.centered.grid .column.video {
-
-        }
-
-    </style>
-{% endblock %}
 
 {% block script %}
     <script src="{{ url_for('static',filename='js/flv.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/stomp.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/danmu.min.js') }}"></script>
 
     <script>
         $(function () {
@@ -82,4 +77,152 @@
         })
     </script>
 
+    <script>
+        function showJson(jsonData) {
+            var content;
+            var div = document.createElement('div');
+            div.id = 'chil';
+            div.innerHTML = jsonData['content'];
+            $('.s_show').append(div);
+            init_screen()
+
+        }
+
+        $(function () {
+            $(".s_btn").click(function () {
+                var text = $(".s_txt").val();
+                var div = document.createElement('div');
+                div.id = 'chil';
+                div.innerHTML = text;
+                $(".s_show").append(div);
+                init_screen()
+            });
+
+            $(".s_txt").keydown(function () {
+                var code = window.event.keyCode;
+                if (code == 13) {
+                    var text = $(".s_txt").val();
+                    var div = document.createElement('div');
+                    div.id = 'chil';
+                    div.innerHTML = text;
+                    $(".s_show").append(div);
+
+                    init_screen();
+                }
+            });
+        });
+
+
+        function init_screen() {
+            var _top = 0;
+
+            $(".s_show").find("div").show().each(function () {
+                var _left = $(".s_dm").width() - $(this).width();
+                var _height = $(".s_dm").height();
+
+                _top = _top + 50;
+
+                if (_top > _height - 50) {
+                    _top = 50;
+                }
+
+                var time = 15000;
+                if ($(this).index() % 2 == 0) {
+                    time = 20000;
+                }
+                //设定文字的初始化位置
+                $(this).css({left: _left, top: _top, color: "#FFF"});
+                $(this).animate({left: -$(this).width() + "px"}, time, function () {
+                    $('#chil').remove();
+                });
+            });
+        }
+
+    </script>
+
+    <script>
+        var ws = new WebSocket("ws://" + window.location.hostname + ":15674/ws"),
+            messages = document.createElement('ul');
+
+        document.body.appendChild(messages);
+
+        var client = Stomp.over(ws);
+
+
+        client.debug = function (m) {
+
+        };
+
+        var counter = 0;
+
+        var on_connect = function (x) {
+            id = client.subscribe("/topic/stream.room.{{ rid }}", function (m) {
+                var doc = JSON.parse(m.body);
+
+                if (doc.type === 'chatmsg') {
+                    showJson(doc)
+                }
+            });
+        };
+
+        var on_error = function () {
+            console.log('error');
+        };
+
+        client.connect('guest', 'guest', on_connect, on_error, '/');
+
+    </script>
+
+{% endblock %}
+
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/danmu.min.css') }}">
+
+    <style>
+        .centeredVideo {
+            width: 100%;
+
+        }
+
+        .ui.centered.grid .column.video {
+
+        }
+
+        .screen {
+            height: 70vh;
+            width: 70%;
+            margin-left: 15%;
+            margin-top: 0;
+            overflow: hidden;
+        }
+
+        .s_show {
+            height: 100%;
+            width: 100%;
+            background: #E8F1F5;
+            position: relative;
+            overflow: hidden;
+
+        }
+
+        .s_show div {
+            width: auto;
+            line-height: 24px;
+            font-size: 20px;
+            font-weight: bold;
+            top: 0;
+            left: 0;
+            position: absolute;
+            overflow: hidden;
+        }
+
+        .s_dm {
+            height: 100%;
+            width: 100%;
+            background: none;
+            overflow-scrolling: inherit;
+        }
+
+    </style>
 {% endblock %}
