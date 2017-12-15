@@ -1,15 +1,16 @@
 import redis
-import json
 
 
 class RedisClient(object):
-    KEY_ONLINE_RID = 'danmu.meta.online'
+    CHANNEL_TEMP_RID = 'danmu.rid.temporary'
 
     def __init__(self):
         self.client = redis.StrictRedis(decode_responses=True)
 
-    def save_online_rid(self, rids: list):
-        self.client.set(self.KEY_ONLINE_RID, json.dumps(rids))
+    def listen_temporary_rid(self):
+        pubsub = self.client.pubsub()
+        pubsub.subscribe([self.CHANNEL_TEMP_RID])
+        return pubsub.listen()
 
-    def load_online_rid(self) -> list:
-        return json.loads(self.client.get(self.KEY_ONLINE_RID))
+    def publish_temporary_rid(self, rid):
+        self.client.publish(self.CHANNEL_TEMP_RID, rid)

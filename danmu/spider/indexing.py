@@ -1,10 +1,7 @@
 import requests
 from danmu import get_logger
-from danmu.redis import RedisClient
 
 logger = get_logger('MetaFetcher')
-
-client = RedisClient()
 
 
 def metadata(page=1):
@@ -28,8 +25,6 @@ def metadata(page=1):
         rt = payload['data']['rl']
 
         rids = [str(item['rid']) for item in rt]
-
-        client.save_online_rid(rids)
 
         return rids
 

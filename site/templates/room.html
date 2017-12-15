@@ -141,25 +141,19 @@
     </script>
 
     <script>
-        var ws = new WebSocket("ws://" + window.location.hostname + ":15674/ws"),
-            messages = document.createElement('ul');
-
-        document.body.appendChild(messages);
-
+        var ws = new WebSocket("ws://" + window.location.hostname + ":15674/ws");
         var client = Stomp.over(ws);
-
 
         client.debug = function (m) {
 
         };
-
-        var counter = 0;
 
         var on_connect = function (x) {
             id = client.subscribe("/topic/stream.room.{{ rid }}", function (m) {
                 var doc = JSON.parse(m.body);
 
                 if (doc.type === 'chatmsg') {
+                    console.log(doc);
                     showJson(doc)
                 }
             });
@@ -171,6 +165,15 @@
 
         client.connect('guest', 'guest', on_connect, on_error, '/');
 
+        window.setInterval(function () {
+            $.ajax({
+                url: "{{ url_for( 'api_danmu_keep_alive',rid=rid) }}",
+                dataType: 'json',
+                success: function (res) {
+
+                }
+            })
+        }, 10 * 1000); // 保持弹幕爬虫持续开启
     </script>
 
 {% endblock %}

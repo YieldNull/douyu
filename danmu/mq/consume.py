@@ -33,6 +33,9 @@ class ParserConsumer(object):
                 self.producer.send(StreamProducer.ROUTE_STREAM + doc['rid'], json.dumps(msg))
 
                 print(msg)
+        except pika.exceptions.ConnectionClosed:
+            print('Reconnect.....Producer')
+            self.producer = StreamProducer()
         except Exception as e:
             print(repr(e))
 

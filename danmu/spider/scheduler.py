@@ -8,6 +8,7 @@ from danmu import settings, get_logger, persistence
 from danmu.spider import indexing
 from danmu.msg import Protocol
 from danmu.persistence import Storage
+from danmu.redis import RedisClient
 
 """
 https://yieldnull.com/blog/f9a25fe711158017f5bf82b0ab41f3dcd114bc7a/
@@ -121,6 +122,8 @@ class Scheduler(object):
 
         self.logger = get_logger('Scheduler', format_str='%(asctime)s [%(name)s] %(levelname)s : %(message)s')
 
+        self.redis = RedisClient()
+
     def process_main(self, wid, pipe: Pipe, queue: Queue):
         tasks = {}
         storage = getattr(persistence, settings.STORAGE_CLASS)('Storage-{:d}'.format(wid))
@@ -138,6 +141,7 @@ class Scheduler(object):
                     tasks[rid].logger.info('Canceling task')
                     tasks[rid].is_canceled = True
                     tasks[rid].writer.close()
+                    tasks.pop(rid)
 
         loop = asyncio.get_event_loop()
 
@@ -152,8 +156,8 @@ class Scheduler(object):
             await room.listen(loop)
             room.logger.info('Task finished')
         except Exception as e:
-            room.logger.warning('Quit room for ' + repr(e))
-            normal = False
+            room.logger.warning('Quit room for ' + ("Canceled" if room.is_canceled else repr(e)))
+            normal = room.is_canceled or False
         finally:
             try:
                 room.writer.close()
@@ -175,7 +179,16 @@ class Scheduler(object):
                 self.logger.info('Reschedule failed task rid:{:s}'.format(rid))
                 self.spawn_tasks([rid])
 
-    def spawn_tasks(self, pending):
+    def listen_redis(self):
+        for item in self.redis.listen_temporary_rid():
+            if item['type'] == 'message':
+                rid = item['data']
+                self.logger.info('Got task from redis. room:{:s}'.format(rid))
+                self.spawn_tasks([rid])
+
+    def spawn_tasks(self, targets):
+        pending = set(targets) - reduce(lambda acc, x: acc | x[1]['running'], self.tasks.items(), set())
+
         for rid in pending:
             pid, _ = min(self.tasks.items(), key=lambda x: len(x[1]['running']))
 
@@ -187,6 +200,7 @@ class Scheduler(object):
 
     def schedule(self, pcount=cpu_count(), pages=1):
         threading.Thread(target=self.listen_queue, args=()).start()
+        threading.Thread(target=self.listen_redis, args=()).start()
 
         for wid in range(pcount):
             pipe, child_pipe = Pipe()
@@ -205,9 +219,7 @@ class Scheduler(object):
 
             targets = indexing.target_rids(pages)
 
-            pending = targets - reduce(lambda acc, x: acc | x[1]['running'], self.tasks.items(), set())
-
-            self.spawn_tasks(pending)
+            self.spawn_tasks(targets)
 
             rooms = targets
 

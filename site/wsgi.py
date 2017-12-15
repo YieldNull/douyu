@@ -6,10 +6,12 @@ import requests
 
 from flask import Flask, render_template, jsonify, abort, url_for
 from settings import MONGO_DATABASE, MONGO_URI, PAGINATE_BY
+from danmu.redis import RedisClient
 
 app = Flask(__name__)
 
 mongo_db = pymongo.MongoClient(MONGO_URI)[MONGO_DATABASE]
+redis_client = RedisClient()
 
 
 @app.route('/')
@@ -23,6 +25,7 @@ def live(rid):
     if c == 0:
         abort(404)
 
+    redis_client.publish_temporary_rid(rid)
     return render_template('room.html', rid=rid)
 
 
@@ -132,6 +135,16 @@ def api_stream(rid):
         return jsonify({'code': 0, 'msg': 'success', 'url': get_url(rid)})
     except Exception as e:
         return jsonify({'code': 1, 'msg': str(e)})
+
+
+@app.route('/api/danmu/keepalive/<string:rid>')
+def api_danmu_keep_alive(rid):
+    c = mongo_db['room'].find({'rid': rid, 'isOnline': True}).count()
+    if c == 0:
+        return jsonify({'code': 1, 'msg': 'room is not online'})
+
+    redis_client.publish_temporary_rid(rid)
+    return jsonify({'code': 0, 'msg': 'success'})
 
 
 if __name__ == '__main__':
