@@ -16,7 +16,7 @@
         <div class="column video">
             <canvas id="canvasBarrage">
             </canvas>
-            <video id="videoElement" class="centeredVideo"  height="625" autoplay>
+            <video id="videoElement" class="centeredVideo" height="625" autoplay>
                 Your browser is too old which doesn't support HTML5 video.
             </video>
         </div>
@@ -68,8 +68,7 @@
                     flvPlayer.play();
                 }
             })
-        })
-
+        });
         var CanvasBarrage = function (canvas, video, options) {
             if (!canvas || !video) {
                 return;
@@ -203,7 +202,6 @@
                     }
                 }
             };
-
             var render = function () {
                 time = video.currentTime;
                 context.clearRect(0, 0, canvas.width, canvas.height);
@@ -243,8 +241,6 @@
                 }
             };
         };
-
-
         var dataBarrage = [{
             value: '',//初始化
             time: 1, // 单位秒
@@ -303,11 +299,13 @@
         .centeredVideo {
             width: 100%;
         }
-        #canvasBarrage{
-            width:1425px;
-            height:625px;
-            position:absolute;
-            top:5px;
+
+        #canvasBarrage {
+            width: 100%;
+            height: 625px;
+            position: absolute;
+            top: 5px;
+            left: 0px;
         }
     </style>
 {% endblock %}
