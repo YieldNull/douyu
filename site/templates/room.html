@@ -14,15 +14,11 @@
 
     <div class="ui centered grid">
         <div class="column video">
-            <div class="screen">
-                <div class="s_dm">
-                    <div class="s_show">
-                        <video id="videoElement" class="centeredVideo" height="625px" autoplay>
-                            Your browser is too old which doesn't support HTML5 video.
-                        </video>
-                    </div>
-                </div>
-            </div>
+            <canvas id="canvasBarrage">
+            </canvas>
+            <video id="videoElement" class="centeredVideo"  height="625" autoplay>
+                Your browser is too old which doesn't support HTML5 video.
+            </video>
         </div>
     </div>
 
@@ -53,15 +49,13 @@
 
 
 {% block script %}
+
     <script src="{{ url_for('static',filename='js/flv.min.js') }}"></script>
     <script src="{{ url_for('static',filename='js/stomp.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='js/danmu.min.js') }}"></script>
-
     <script>
         $(function () {
             $.getJSON("/api/stream/{{ rid }}", function (data) {
-                console.log(data);
-
+                {#console.log(data);#}
                 if (data.code === 0 && flvjs.isSupported()) {
                     var videoElement = document.getElementById('videoElement');
                     var flvPlayer = flvjs.createPlayer({
@@ -75,86 +69,210 @@
                 }
             })
         })
-    </script>
 
-    <script>
-        function showJson(jsonData) {
-            var content;
-            var div = document.createElement('div');
-            div.id = 'chil';
-            div.innerHTML = jsonData['content'];
-            $('.s_show').append(div);
-            init_screen()
+        var CanvasBarrage = function (canvas, video, options) {
+            if (!canvas || !video) {
+                return;
+            }
+            var defaults = {
+                opacity: 100,
+                fontSize: 24,
+                speed: 2,
+                range: [0, 1],
+                color: 'black',
+                data: []
+            };
 
-        }
+            options = options || {};
 
-        $(function () {
-            $(".s_btn").click(function () {
-                var text = $(".s_txt").val();
-                var div = document.createElement('div');
-                div.id = 'chil';
-                div.innerHTML = text;
-                $(".s_show").append(div);
-                init_screen()
-            });
-
-            $(".s_txt").keydown(function () {
-                var code = window.event.keyCode;
-                if (code == 13) {
-                    var text = $(".s_txt").val();
-                    var div = document.createElement('div');
-                    div.id = 'chil';
-                    div.innerHTML = text;
-                    $(".s_show").append(div);
-
-                    init_screen();
+            var params = {};
+            for (var key in defaults) {
+                if (options[key]) {
+                    params[key] = options[key];
+                } else {
+                    params[key] = defaults[key];
                 }
+
+                this[key] = params[key];
+            }
+            var top = this;
+            var data = top.data;
+
+            if (!data || !data.length) {
+                return;
+            }
+
+            var context = canvas.getContext('2d');
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+
+            var store = {};
+
+            var isPause = true;
+            var time = video.currentTime;
+
+            var fontSize = 28;
+            var Barrage = function (obj) {
+                this.value = obj.value;
+                this.time = obj.time;
+                this.init = function () {
+                    var speed = top.speed;
+                    if (obj.hasOwnProperty('speed')) {
+                        speed = obj.speed;
+                    }
+                    if (speed !== 0) {
+                        speed = speed + obj.value.length / 100;
+                    }
+                    var fontSize = obj.fontSize || top.fontSize;
+                    var color = obj.color || top.color;
+                    color = (function () {
+                        var div = document.createElement('div');
+                        div.style.backgroundColor = color;
+                        document.body.appendChild(div);
+                        var c = window.getComputedStyle(div).backgroundColor;
+                        document.body.removeChild(div);
+                        return c;
+                    })();
+                    var range = obj.range || top.range;
+                    var opacity = obj.opacity || top.opacity;
+                    opacity = opacity / 100;
+                    var span = document.createElement('span');
+                    span.style.position = 'absolute';
+                    span.style.whiteSpace = 'nowrap';
+                    span.style.font = 'bold ' + fontSize + 'px "microsoft yahei", sans-serif';
+                    span.innerText = obj.value;
+                    span.textContent = obj.value;
+                    document.body.appendChild(span);
+                    this.width = span.clientWidth;
+                    document.body.removeChild(span);
+                    this.x = canvas.width;
+                    if (speed == 0) {
+                        this.x = (this.x - this.width) / 2;
+                    }
+                    this.actualX = canvas.width;
+                    this.y = range[0] * canvas.height + (range[1] - range[0]) * canvas.height * Math.random();
+                    if (this.y < fontSize) {
+                        this.y = fontSize;
+                    } else if (this.y > canvas.height - fontSize) {
+                        this.y = canvas.height - fontSize;
+                    }
+
+                    this.moveX = speed;
+                    this.opacity = opacity;
+                    this.color = color;
+                    this.range = range;
+                    this.fontSize = fontSize;
+                };
+
+                this.draw = function () {
+                    context.shadowColor = 'rgba(0,0,0,' + this.opacity + ')';
+                    context.shadowBlur = 2;
+                    context.font = this.fontSize + 'px "microsoft yahei", sans-serif';
+                    if (/rgb\(/.test(this.color)) {
+                        context.fillStyle = 'rgba(' + this.color.split('(')[1].split(')')[0] + ',' + this.opacity + ')';
+                    } else {
+                        context.fillStyle = this.color;
+                    }
+                    context.fillText(this.value, this.x, this.y);
+                };
+            };
+
+            data.forEach(function (obj, index) {
+                store[index] = new Barrage(obj);
             });
+            var draw = function () {
+                for (var index in store) {
+                    var barrage = store[index];
+
+                    if (barrage && !barrage.disabled && time >= barrage.time) {
+                        if (!barrage.inited) {
+                            barrage.init();
+                            barrage.inited = true;
+                        }
+                        barrage.x -= barrage.moveX;
+                        if (barrage.moveX == 0) {
+                            barrage.actualX -= top.speed;
+                        } else {
+                            barrage.actualX = barrage.x;
+                        }
+                        if (barrage.actualX < -1 * barrage.width) {
+                            barrage.x = barrage.actualX;
+                            barrage.disabled = true;
+                        }
+                        barrage.draw();
+                    }
+                }
+            };
+
+            var render = function () {
+                time = video.currentTime;
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                draw();
+                if (isPause == false) {
+                    requestAnimationFrame(render);
+                }
+            };
+            video.addEventListener('play', function () {
+                isPause = false;
+                render();
+            });
+            video.addEventListener('pause', function () {
+                isPause = true;
+            });
+            video.addEventListener('seeked', function () {
+                top.reset();
+            });
+
+            this.add = function (obj) {
+                store[Object.keys(store).length] = new Barrage(obj);
+            };
+
+            this.reset = function () {
+                time = video.currentTime;
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                for (var index in store) {
+                    var barrage = store[index];
+                    if (barrage) {
+                        barrage.disabled = false;
+                        if (time < barrage.time) {
+                            barrage.inited = null;
+                        } else {
+                            barrage.disabled = true;
+                        }
+                    }
+                }
+            };
+        };
+
+
+        var dataBarrage = [{
+            value: '',//初始化
+            time: 1, // 单位秒
+            speed: 0
+        }]
+        var eleCanvas = document.getElementById('canvasBarrage');
+        var eleVideo = document.getElementById('videoElement');
+        var demoBarrage = new CanvasBarrage(eleCanvas, eleVideo, {
+            data: dataBarrage
         });
 
-
-        function init_screen() {
-            var _top = 0;
-
-            $(".s_show").find("div").show().each(function () {
-                var _left = $(".s_dm").width() - $(this).width();
-                var _height = $(".s_dm").height();
-
-                _top = _top + 50;
-
-                if (_top > _height - 50) {
-                    _top = 50;
-                }
-
-                var time = 15000;
-                if ($(this).index() % 2 == 0) {
-                    time = 20000;
-                }
-                //设定文字的初始化位置
-                $(this).css({left: _left, top: _top, color: "#FFF"});
-                $(this).animate({left: -$(this).width() + "px"}, time, function () {
-                    $('#chil').remove();
-                });
-            });
-        }
-
-    </script>
-
-    <script>
         var ws = new WebSocket("ws://" + window.location.hostname + ":15674/ws");
         var client = Stomp.over(ws);
 
         client.debug = function (m) {
 
         };
-
         var on_connect = function (x) {
             id = client.subscribe("/topic/stream.room.{{ rid }}", function (m) {
                 var doc = JSON.parse(m.body);
-
                 if (doc.type === 'chatmsg') {
-                    console.log(doc);
-                    showJson(doc)
+                    var tmp = {
+                        value: doc.content,
+                        time: eleVideo.currentTime,
+                        // 其它如color, fontSize, opacity等可选
+                    }
+                    console.log(tmp);
+                    demoBarrage.add(tmp);
                 }
             });
         };
@@ -180,52 +298,16 @@
 
 
 {% block css %}
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/danmu.min.css') }}">
 
     <style>
         .centeredVideo {
             width: 100%;
-
         }
-
-        .ui.centered.grid .column.video {
-
+        #canvasBarrage{
+            width:1425px;
+            height:625px;
+            position:absolute;
+            top:5px;
         }
-
-        .screen {
-            height: 70vh;
-            width: 70%;
-            margin-left: 15%;
-            margin-top: 0;
-            overflow: hidden;
-        }
-
-        .s_show {
-            height: 100%;
-            width: 100%;
-            background: #E8F1F5;
-            position: relative;
-            overflow: hidden;
-
-        }
-
-        .s_show div {
-            width: auto;
-            line-height: 24px;
-            font-size: 20px;
-            font-weight: bold;
-            top: 0;
-            left: 0;
-            position: absolute;
-            overflow: hidden;
-        }
-
-        .s_dm {
-            height: 100%;
-            width: 100%;
-            background: none;
-            overflow-scrolling: inherit;
-        }
-
     </style>
 {% endblock %}
