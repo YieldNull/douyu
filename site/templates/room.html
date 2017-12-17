@@ -13,7 +13,7 @@
     </div>
 
     <div class="ui centered grid">
-        <div class="column video">
+        <div class="column video" >
             <canvas id="canvasBarrage">
             </canvas>
             <video id="videoElement" class="centeredVideo" height="625" autoplay>
@@ -69,6 +69,7 @@
                 }
             })
         });
+
         var CanvasBarrage = function (canvas, video, options) {
             if (!canvas || !video) {
                 return;
@@ -258,17 +259,39 @@
         client.debug = function (m) {
 
         };
+        var flag = true;
         var on_connect = function (x) {
             id = client.subscribe("/topic/stream.room.{{ rid }}", function (m) {
                 var doc = JSON.parse(m.body);
                 if (doc.type === 'chatmsg') {
-                    var tmp = {
+
+                    {#console.log(doc);#}
+                    var tmp1 = {
                         value: doc.content,
                         time: eleVideo.currentTime,
+                        range: [0, 0.5],
+                        color:'#FFF',
                         // 其它如color, fontSize, opacity等可选
                     }
-                    console.log(tmp);
-                    demoBarrage.add(tmp);
+                    var tmp2 = {
+                        value: doc.content,
+                        time: eleVideo.currentTime,
+                        range: [0.5, 1],
+                        color:'#FFF',
+                        // 其它如color, fontSize, opacity等可选
+                    }
+                    switch (flag) {
+                        case true:
+                            console.log(tmp1);
+                            demoBarrage.add(tmp1);
+                            flag = false
+                            break;
+                        case false:
+                            console.log(tmp2);
+                            demoBarrage.add(tmp2);
+                            flag = true
+                            break;
+                    }
                 }
             });
         };
@@ -288,8 +311,8 @@
                 }
             })
         }, 10 * 1000); // 保持弹幕爬虫持续开启
-    </script>
 
+    </script>
 {% endblock %}
 
 
@@ -301,11 +324,11 @@
         }
 
         #canvasBarrage {
-            width: 100%;
-            height: 625px;
+            width: 1100px;
+            height: 640px;
             position: absolute;
-            top: 5px;
-            left: 0px;
+            top: 12px;
+            left: 17%;
         }
     </style>
 {% endblock %}
