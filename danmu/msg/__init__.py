@@ -5,4 +5,3 @@ class Parser(object):
 
 from .protocol import Protocol
 from .regex_parser import RegexParser
-from .grako_parser import GrakoParser
