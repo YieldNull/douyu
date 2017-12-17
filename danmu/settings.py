@@ -1,5 +1,6 @@
 import logging
 import sys
+import os
 
 SERVER_ADDRESS = 'openbarrage.douyutv.com'
 SERVER_PORT = 8601
@@ -14,7 +15,7 @@ STORAGE_ASYNC = False
 
 PARSER_CLASS = 'RegexParser'
 
-FILE_STORAGE_REPOSITORY = '/Users/shimingxin/Documents/msg'
+FILE_STORAGE_REPOSITORY = os.environ['DANMU_REPO']
 FILE_STORAGE_DATE_FORMAT = '%Y_%m_%d'
 FILE_STORAGE_NAME_FORMAT = FILE_STORAGE_REPOSITORY + '/{name}_{date}.txt'
 
