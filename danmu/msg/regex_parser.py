@@ -65,7 +65,7 @@ class RegexParser(Parser):
         if self.badgenn.search(msg) is not None:
             return self.badgenn.search(msg).group(1)
         else:
-            return '0'
+            return None
 
     def __getBadgelv(self, msg):
         return self.badgelv.search(msg).group(1)

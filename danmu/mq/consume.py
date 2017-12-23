@@ -29,7 +29,7 @@ class ParserConsumer(object):
             msg = self.parser.parse(doc['raw'])
 
             if msg['type'] != 'other':
-                msg.update({'rid': doc['rid'], 'ts': doc['ts']})
+                msg.update({'roomID': doc['rid'], 'time': doc['ts']})
                 self.producer.send(StreamProducer.ROUTE_STREAM + doc['rid'], json.dumps(msg))
 
                 print(msg)
