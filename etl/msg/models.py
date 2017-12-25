@@ -31,6 +31,7 @@ class Gift(BaseModel):
 class User(BaseModel):
     id = PrimaryKeyField()
     name = CharField(unique=True)
+    # level = IntegerField()
 
 
 class TextDanmu(BaseModel):

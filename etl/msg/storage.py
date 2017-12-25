@@ -1,98 +1,41 @@
 import peewee
+import logging
 from asyncio import ensure_future, gather
 from datetime import datetime
 from etl.msg.models import *
 from etl.msg.cache import RedisClient
 
 
-class RDSStorage(object):
-    def store(self, msg):
-        _type = msg['type']
-
-        msg['time'] = datetime.fromtimestamp(float(msg['time']))
-
-        if _type == 'chatmsg':
-            self._store_text(msg)
-        elif _type == 'dgb':
-            self._store_normal_gift(msg)
-        elif _type == 'spbc':
-            self._store_super_gift(msg)
-        elif _type == 'gpbc':
-            self._store_u2u(msg)
-        elif _type == 'uenter':
-            self._store_uenter(msg)
-
-    def _store_text(self, msg):
-        user, _ = User.get_or_create(name=msg['username'])
-
-        room, _ = Room.get_or_create(rid=int(msg['roomID']))
-
-        broom, _ = Room.get_or_create(rid=int(msg['broomID']))
-
-        TextDanmu.create(room=room, user=user, timestamp=msg['time'])
-
-    def _store_normal_gift(self, msg):
-        user, _ = User.get_or_create(name=msg['username'])
-
-        room, _ = Room.get_or_create(rid=int(msg['roomID']))
-
-        broom, _ = Room.get_or_create(rid=int(msg['broomID']))
-
-        gift, _ = Gift.get_or_create(name=msg['giftID'], defaults={'type': Gift.TYPE_NORMAL})
-
-        GiftDanmu.create(room=room, user=user, gift=gift, timestamp=msg['time'])
-
-    def _store_super_gift(self, msg):
-        if msg['roomID'] != msg['droomID']:  # dup filter
-            return
-
-        user, _ = User.get_or_create(name=msg['username'])
-
-        room, _ = Room.get_or_create(rid=int(msg['roomID']))
-
-        gift, _ = Gift.get_or_create(name=msg['giftname'], defaults={'type': Gift.TYPE_SUPER})
-
-        GiftDanmu.create(room=room, user=user, gift=gift, timestamp=msg['time'])
-
-    def _store_u2u(self, msg):
-        room, _ = Room.get_or_create(rid=int(msg['roomID']))
-        gift, _ = Gift.get_or_create(name=msg['pnm'], defaults={'type': Gift.TYPE_U2U})
-        sender, _ = User.get_or_create(name=msg['username'])
-        receiver, _ = User.get_or_create(name=msg['rusername'])
-
-        U2UDanmu.create(room=room, sender=sender, receiver=receiver, gift=gift,
-                        timestamp=msg['time'])
-
-    def _store_uenter(self, msg):
-        user, _ = User.get_or_create(name=msg['username'])
-        room, _ = Room.get_or_create(rid=int(msg['roomID']))
-
-        UEnterDanmu.create(room=room, user=user, timestamp=msg['time'])
-
-
 class AsyncRDSStorage(object):
     def __init__(self, manager):
         self.manager = manager
+        self.logger = logging.getLogger('AsyncRDSStorage')
         self.redis = RedisClient()
 
+    async def connect(self, loop):
+        await self.redis.connect(loop)
+
     async def store(self, msg):
-        _type = msg['type']
+        try:
+            _type = msg['type']
 
-        msg['time'] = datetime.fromtimestamp(float(msg['time']))
+            msg['time'] = datetime.fromtimestamp(float(msg['time']))
 
-        if _type == 'chatmsg':
-            await self._store_text(msg)
-        elif _type == 'dgb':
-            await self._store_normal_gift(msg)
-        elif _type == 'spbc':
-            await self._store_super_gift(msg)
-        elif _type == 'gpbc':
-            await self._store_u2u(msg)
-        elif _type == 'uenter':
-            await self._store_uenter(msg)
+            if _type == 'chatmsg':
+                await self._store_text(msg)
+            elif _type == 'dgb':
+                await self._store_normal_gift(msg)
+            elif _type == 'spbc':
+                await self._store_super_gift(msg)
+            elif _type == 'gpbc':
+                await self._store_u2u(msg)
+            elif _type == 'uenter':
+                await self._store_uenter(msg)
+        except Exception as e:
+            self.logger.warning('%s:%s' % (repr(e), repr(msg)))
 
     async def _store_text(self, msg):
-        user_task = ensure_future(self.get_or_create(User, name=msg['username']))
+        user_task = ensure_future(self.get_or_create(User, name=msg['username'], ))
 
         room_task = ensure_future(self.get_or_create(Room, rid=int(msg['roomID'])))
 
@@ -103,7 +46,7 @@ class AsyncRDSStorage(object):
         await self.manager.create(TextDanmu, room=room, user=user, timestamp=msg['time'])
 
     async def _store_normal_gift(self, msg):
-        user_task = ensure_future(self.get_or_create(User, name=msg['username']))
+        user_task = ensure_future(self.get_or_create(User, name=msg['username'], ))
 
         room_task = ensure_future(self.get_or_create(Room, rid=int(msg['roomID'])))
 
@@ -155,7 +98,7 @@ class AsyncRDSStorage(object):
     async def get_or_create(self, model, defaults=None, **kwargs):
 
         async def aux(key, func_load, func_save):
-            id_ = func_load(kwargs[key])
+            id_ = await func_load(kwargs[key])
             if id_ is not None:
                 return int(id_), False
             else:
@@ -163,11 +106,12 @@ class AsyncRDSStorage(object):
                 data.update({k: v for k, v in kwargs.items()
                              if not '__' in k})
                 try:
-                    id_ = (await self.manager.create(model, **data)).id
-                    func_save(id_, kwargs[key])
+                    row = (await self.manager.create(model, **data))
+                    id_ = row.id
+                    await func_save(id_, kwargs[key])
                     return id_, True
                 except peewee.IntegrityError:
-                    return int(func_load(kwargs[key])), False
+                    return (await self.manager.get(model, **kwargs)), False
 
         if model == Room:
             return await aux('rid', self.redis.get_room, self.redis.save_room)
