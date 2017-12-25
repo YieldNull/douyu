@@ -1,17 +1,22 @@
 import asyncio
+import os
+import sys
+import time
 from concurrent.futures import ProcessPoolExecutor
 from danmu.msg import RegexParser
 from etl.msg import parse_raw
-from etl.msg.storage import AsyncRDSStorage
+from etl.msg.storage import AsyncRDSStorage, AsyncTextStorage
 from etl.msg.models import *
 from peewee_async import Manager
 
 
 def parse_file(path):
+    loop = asyncio.get_event_loop()
+
     async def parse():
-        manager = Manager(db, loop=loop)
+        # manager = Manager(db, loop=loop)
         parser = RegexParser()
-        storage = AsyncRDSStorage(manager)
+        storage = AsyncTextStorage(os.path.splitext(os.path.basename(path))[0])
 
         await storage.connect(loop)
 
@@ -29,17 +34,11 @@ def parse_file(path):
                     counter = 0
                     tasks = []
 
-    loop = asyncio.get_event_loop()
-
     loop.run_until_complete(parse())
 
 
 if __name__ == '__main__':
     db.create_tables([Room, User, Gift, TextDanmu, GiftDanmu, UEnterDanmu, U2UDanmu], safe=True)
-
-    import os
-    import sys
-    import time
 
     max_workers = sys.argv[2] if len(sys.argv) > 2 else 10
     start = time.time()

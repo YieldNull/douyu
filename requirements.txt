@@ -12,3 +12,4 @@ Flask
 pymongo
 scrapy
 scrapy-random-useragent
+aiofiles

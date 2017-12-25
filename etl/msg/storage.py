@@ -1,5 +1,6 @@
 import peewee
 import logging
+import aiofiles
 from asyncio import ensure_future, gather
 from datetime import datetime
 from etl.msg.models import *
@@ -124,3 +125,157 @@ class AsyncRDSStorage(object):
                 return await aux('name', self.redis.get_gift_super, self.redis.save_gift_super)
             else:
                 return await aux('name', self.redis.get_gift_u2u, self.redis.save_gift_u2u)
+
+
+class AsyncTextStorage(object):
+    def __init__(self, file_prefix):
+
+        self.file_prefix = file_prefix
+        self.logger = logging.getLogger('AsyncTextStorage-%s' % self.file_prefix)
+
+        self.redis = RedisClient()
+
+        self.fd_text = None
+        self.fd_gift = None
+        self.fd_uenter = None
+        self.fd_u2u = None
+
+    async def connect(self, loop):
+        await self.redis.connect(loop)
+
+        self.fd_text = await aiofiles.open(self.file_prefix + '_text.txt', 'w',
+                                           buffering=1024 * 128, encoding='utf-8', loop=loop)
+        self.fd_gift = await aiofiles.open(self.file_prefix + '_gift.txt', 'w',
+                                           buffering=1024 * 128, encoding='utf-8', loop=loop)
+        self.fd_uenter = await aiofiles.open(self.file_prefix + '_uenter.txt', 'w',
+                                             buffering=1024 * 128, encoding='utf-8', loop=loop)
+        self.fd_u2u = await aiofiles.open(self.file_prefix + '_u2u.txt', 'w',
+                                          buffering=1024 * 128, encoding='utf-8', loop=loop)
+
+    async def store(self, msg):
+        try:
+            _type = msg['type']
+
+            msg['time'] = int(float(msg['time']))  # datetime.fromtimestamp(float(msg['time']))
+
+            if _type == 'chatmsg':
+                await self._store_text(msg)
+            elif _type == 'dgb':
+                await self._store_normal_gift(msg)
+            elif _type == 'spbc':
+                await self._store_super_gift(msg)
+            elif _type == 'gpbc':
+                await self._store_u2u(msg)
+            elif _type == 'uenter':
+                await self._store_uenter(msg)
+        except Exception as e:
+            self.logger.exception("Error in storing msg:%s" % repr(msg))
+
+    async def _store_text(self, msg):
+        user_task = ensure_future(self.get_or_create(User, name=msg['username'], defaults={'level': msg['userlevel']}))
+
+        room_task = ensure_future(self.get_or_create(Room, rid=int(msg['roomID'])))
+
+        broom_task = ensure_future(self.get_or_create(Room, rid=int(msg['broomID'])))
+
+        (user, _), (room, _), (broom, _) = await gather(user_task, room_task, broom_task)
+
+        await self.create_danmu(TextDanmu, room=room, user=user, timestamp=msg['time'])
+
+    async def _store_normal_gift(self, msg):
+        user_task = ensure_future(self.get_or_create(User, name=msg['username'], defaults={'level': msg['userlevel']}))
+
+        room_task = ensure_future(self.get_or_create(Room, rid=int(msg['roomID'])))
+
+        broom_task = ensure_future(self.get_or_create(Room, rid=int(msg['broomID'])))
+
+        gift_task = ensure_future(
+            self.get_or_create(Gift, name=msg['giftID'], defaults={'type': Gift.TYPE_NORMAL}))
+
+        (user, _), (room, _), (broom, _), (gift, _) = await gather(user_task, room_task, broom_task, gift_task)
+
+        await self.create_danmu(GiftDanmu, room=room, user=user, gift=gift, timestamp=msg['time'])
+
+    async def _store_super_gift(self, msg):
+        if msg['roomID'] != msg['droomID']:  # dup filter
+            return
+
+        user_task = ensure_future(self.get_or_create(User, name=msg['username']))
+
+        room_task = ensure_future(self.get_or_create(Room, rid=int(msg['roomID'])))
+
+        gift_task = ensure_future(
+            self.get_or_create(Gift, name=msg['giftname'], defaults={'type': Gift.TYPE_SUPER}))
+
+        (user, _), (room, _), (gift, _) = await gather(user_task, room_task, gift_task)
+
+        await self.create_danmu(GiftDanmu, room=room, user=user, gift=gift, timestamp=msg['time'])
+
+    async def _store_u2u(self, msg):
+        room_task = ensure_future(self.get_or_create(Room, rid=int(msg['roomID'])))
+        gift_task = ensure_future(self.get_or_create(Gift, name=msg['pnm'], defaults={'type': Gift.TYPE_U2U}))
+        sender_task = ensure_future(self.get_or_create(User, name=msg['username']))
+        receiver_task = ensure_future(self.get_or_create(User, name=msg['rusername']))
+
+        (room, _), (gift, _), (sender, _), (receiver, _) = await gather(room_task, gift_task, sender_task,
+                                                                        receiver_task)
+
+        await self.create_danmu(U2UDanmu, room=room, sender=sender, receiver=receiver,
+                                gift=gift, timestamp=msg['time'])
+
+    async def _store_uenter(self, msg):
+
+        user_task = ensure_future(self.get_or_create(User, name=msg['username']))
+        room_task = ensure_future(self.get_or_create(Room, rid=int(msg['roomID'])))
+
+        (user, _), (room, _) = await gather(user_task, room_task)
+
+        await self.create_danmu(UEnterDanmu, room=room, user=user, timestamp=msg['time'])
+
+    async def create_danmu(self, model, **kwargs):
+        if model == TextDanmu:
+            fd = self.fd_text
+        elif model == GiftDanmu:
+            fd = self.fd_gift
+        elif model == U2UDanmu:
+            fd = self.fd_u2u
+        else:
+            fd = self.fd_uenter
+
+        await fd.write('%s\n' % ('\t'.join([str(v) for v in kwargs.values()])))
+
+    async def get_or_create(self, model, defaults=None, **kwargs):
+
+        async def aux(key, func_load, func_save, func_incr):
+            _id = await func_load(kwargs[key])
+            if _id:
+                return _id, False
+            else:
+                _id = (await func_incr())
+                await func_save(_id, kwargs[key])
+                return _id, True
+
+        if model == User:
+            result = await self.redis.get_room(kwargs['name'])
+            if result:
+                id_, level = result
+                new_level = defaults.get('level', None)
+                if new_level and new_level > level:  # update level
+                    await self.redis.save_user(id_, kwargs['name'], new_level)
+                return id_, False
+            else:
+                id_ = (await self.redis.incr_user_id())
+                await self.redis.save_user(id_, kwargs['name'], defaults.get('level', 0) if defaults else 0)
+                return id_, True
+        elif model == Room:
+            return await aux('rid', self.redis.get_room, self.redis.save_room, self.redis.incr_room_id)
+        else:
+            if defaults['type'] == Gift.TYPE_NORMAL:
+                return await aux('name', self.redis.get_gift_normal,
+                                 self.redis.save_gift_normal, self.redis.incr_gift_id)
+            elif defaults['type'] == Gift.TYPE_SUPER:
+                return await aux('name', self.redis.get_gift_super,
+                                 self.redis.save_gift_super, self.redis.incr_gift_id)
+            else:
+                return await aux('name', self.redis.get_gift_u2u,
+                                 self.redis.save_gift_u2u, self.redis.incr_gift_id)
