@@ -13,3 +13,4 @@ pymongo
 scrapy
 scrapy-random-useragent
 aiofiles
+pandas

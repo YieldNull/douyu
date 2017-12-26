@@ -33,7 +33,7 @@ class TextStorage(object):
             elif _type == 'uenter':
                 self._store_uenter(msg)
         except Exception as e:
-            self.logger.exception("Error in storing msg:%s" % repr(msg))
+            self.logger.exception("\nError in storing msg:%s\n" % repr(msg))
 
     def close(self):
         self.fd_text.close()
@@ -42,16 +42,14 @@ class TextStorage(object):
         self.fd_u2u.close()
 
     def _store_text(self, msg):
-        user = self.get_or_create(User, name=msg['username'], defaults={'level': msg['userlevel']})
+        user = self.get_or_create(User, name=msg['username'], defaults={'level': int(msg['userlevel'])})
         room = self.get_or_create(Room, rid=int(msg['roomID']))
-        _ = self.get_or_create(Room, rid=int(msg['broomID']))
 
         self.create_danmu(TextDanmu, room=room, user=user, timestamp=msg['time'])
 
     def _store_normal_gift(self, msg):
-        user = self.get_or_create(User, name=msg['username'], defaults={'level': msg['userlevel']})
+        user = self.get_or_create(User, name=msg['username'], defaults={'level': int(msg['userlevel'])})
         room = self.get_or_create(Room, rid=int(msg['roomID']))
-        _ = self.get_or_create(Room, rid=int(msg['broomID']))
 
         gift = self.get_or_create(Gift, name=msg['giftID'], defaults={'type': Gift.TYPE_NORMAL})
 
@@ -97,36 +95,30 @@ class TextStorage(object):
 
     def get_or_create(self, model, defaults=None, **kwargs):
 
-        def aux(key, func_load, func_save, func_incr):
+        def aux(key, func_load, func_save):
             _id = func_load(kwargs[key])
+
             if _id is not None:
                 return _id
             else:
-                _id = func_incr()
-                func_save(_id, kwargs[key])
-                return _id
+                return func_save(kwargs[key])
 
         if model == User:
-            result = self.redis.get_room(kwargs['name'])
+            result = self.redis.get_user(kwargs['name'])
             if result is not None:
                 id_, level = result
-                new_level = defaults.get('level', None)
-                if new_level and new_level > level:  # update level
-                    self.redis.save_user(id_, kwargs['name'], new_level)
+                new_level = defaults.get('level', 0) if defaults is not None else 0
+                if new_level > level:  # update level
+                    self.redis.update_user(id_, kwargs['name'], new_level)
                 return id_
             else:
-                id_ = self.redis.incr_user_id()
-                self.redis.save_user(id_, kwargs['name'], defaults.get('level', 0) if defaults else 0)
-                return id_
+                return self.redis.save_user(kwargs['name'], defaults.get('level', 0) if defaults is not None else 0)
         elif model == Room:
-            return aux('rid', self.redis.get_room, self.redis.save_room, self.redis.incr_room_id)
+            return aux('rid', self.redis.get_room, self.redis.save_room)
         else:
             if defaults['type'] == Gift.TYPE_NORMAL:
-                return aux('name', self.redis.get_gift_normal,
-                           self.redis.save_gift_normal, self.redis.incr_gift_id)
+                return aux('name', self.redis.get_gift_normal, self.redis.save_gift_normal)
             elif defaults['type'] == Gift.TYPE_SUPER:
-                return aux('name', self.redis.get_gift_super,
-                           self.redis.save_gift_super, self.redis.incr_gift_id)
+                return aux('name', self.redis.get_gift_super, self.redis.save_gift_super)
             else:
-                return aux('name', self.redis.get_gift_u2u,
-                           self.redis.save_gift_u2u, self.redis.incr_gift_id)
+                return aux('name', self.redis.get_gift_u2u, self.redis.save_gift_u2u)
