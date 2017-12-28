@@ -15,8 +15,13 @@ def urls(out_file):
 
 
 def urls_group_by_date(repo):
+    if not os.path.exists(repo):
+        os.makedirs(repo, exist_ok=True)
+
     auth = oss2.Auth(local.OSS_KEY, local.OSS_SECRET)
     bucket = oss2.Bucket(auth, local.OSS_ENDPOINT, local.OSS_BUCKET)
+
+    dates = set()
 
     for obj in bucket.list_objects(prefix='Storage', max_keys=1000).object_list:
         date = re.search('.*?_(\w+).txt.bz', obj.key).group(1)
@@ -25,6 +30,9 @@ def urls_group_by_date(repo):
             url = 'http://%s/%s' % (local.OSS_DOMAIN, obj.key)
             fout.write('%s\n' % url)
 
+        dates.add(date)
+
+    for date in sorted(dates):
         with open(os.path.join(repo, 'dates.txt'), 'a', encoding='utf-8') as fout:
             fout.write('%s\n' % date)
 
