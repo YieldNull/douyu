@@ -14,7 +14,7 @@ def parse_file(path, repo):
     with open(path, 'r', encoding='utf-8', buffering=1024 * 128) as f:
         for line in f:
             msg = parse_raw(parser, line)
-            if msg:
+            if msg and msg.get('type', 'other') != 'other':
                 storage.store(msg)
     storage.close()
 

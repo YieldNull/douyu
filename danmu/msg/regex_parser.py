@@ -1,6 +1,5 @@
 __author__ = 'LEO'
 import re
-import time
 import logging
 
 from danmu.msg import Parser
@@ -177,7 +176,7 @@ class RegexParser(Parser):
     def getOther(self, msg):
         if msg is None:
             return
-        return {'ohter': msg, 'time': time, 'type': 'other'}
+        return {'other': msg, 'type': 'other'}
 
     def parse(self, msg: str):
         if (msg is None):
