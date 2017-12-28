@@ -114,7 +114,7 @@ class TextStorage(object):
             else:
                 return self.redis.save_user(kwargs['name'], defaults.get('level', 0) if defaults is not None else 0)
         elif model == Room:
-            return aux('rid', self.redis.get_room, self.redis.save_room)
+            return kwargs['rid']
         else:
             if defaults['type'] == Gift.TYPE_NORMAL:
                 return aux('name', self.redis.get_gift_normal, self.redis.save_gift_normal)

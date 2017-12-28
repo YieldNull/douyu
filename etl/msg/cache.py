@@ -6,16 +6,6 @@ class RedisClient(object):
 
     def __init__(self):
         self.client = redis.StrictRedis(decode_responses=True)
-        self.pipe = self.client.pipeline()
-
-    def save_room(self, rid):
-        key = 'r:{}'.format(rid)
-        return self._incr_and_save(key, self._incr_room_id,
-                                   lambda id_: id_,
-                                   lambda x: x)
-
-    def get_room(self, rid):
-        return self.client.get('r:{}'.format(rid))
 
     def save_user(self, name, level):
         key = 'u:{}'.format(name)

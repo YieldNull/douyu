@@ -2,8 +2,6 @@ motor
 requests
 oss2
 peewee
-peewee-async
-aiomysql
 PyMySQL
 pika
 redis
