@@ -3,9 +3,7 @@ import threading
 import queue
 import json
 from danmu.mq import RawProducer
-from danmu import settings, get_logger, msg
-from danmu.msg import Protocol
-from motor.motor_asyncio import AsyncIOMotorClient
+from danmu import settings, get_logger
 
 
 class Storage(object):
@@ -19,41 +17,6 @@ class Storage(object):
         pass
 
 
-class MongodbStorage(Storage):
-    def __init__(self, name):
-        super().__init__(name)
-
-        self.client = AsyncIOMotorClient(settings.MONGODB_URL)
-        database = self.client[settings.MONGODB_DATABASE]
-        self.collection = database[settings.MONGODB_COLLECTION]
-
-        self.protocol = Protocol()
-        self.parser = getattr(msg, settings.PARSER_CLASS)()
-
-        self.logger = get_logger(name)
-
-    async def store(self, doc: dict):
-        payload = doc['payload']
-
-        if settings.MONGODB_PARSE_MSG:
-            try:
-                message = self.protocol.unpack_payload(self.parser, payload)
-                doc.pop('payload')
-                doc.update(message)
-            except UnicodeDecodeError as e:
-                self.logger.warning('Discard packet for ' + repr(e))
-                return
-
-        doc['payload'] = payload[:-1].decode('utf-8')
-
-        self.logger.debug('Store ' + repr(doc))
-
-        await self.collection.insert_one(doc)
-
-    def close(self):
-        self.client.close()
-
-
 class FileStorage(Storage):
     def __init__(self, name):
         super().__init__(name)
@@ -64,7 +27,7 @@ class FileStorage(Storage):
         self.jobs = queue.Queue()
         self.logger = get_logger(name)
 
-        self.producer = RawProducer()
+        self.producer = RawProducer(host=settings.MQ_PARSER_ADDRESS, port=settings.MQ_PARSER_PORT)
 
         self.thread = threading.Thread(target=self.handler_thread)
         self.thread.start()

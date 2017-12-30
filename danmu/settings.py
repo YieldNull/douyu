@@ -5,11 +5,6 @@ import os
 SERVER_ADDRESS = 'openbarrage.douyutv.com'
 SERVER_PORT = 8601
 
-MONGODB_URL = 'mongodb://localhost:27017/'
-MONGODB_DATABASE = 'danmu'
-MONGODB_COLLECTION = 'douyu'
-MONGODB_PARSE_MSG = False
-
 STORAGE_CLASS = 'FileStorage'
 STORAGE_ASYNC = False
 
@@ -25,3 +20,9 @@ INDEXING_PERIOD = 10
 LOGGING_LEVEL = logging.INFO
 LOGGING_STREAM = sys.stdout
 LOGGING_BASIC_FORMATTER = '%(asctime)s [%(name)s] %(levelname)s pid-%(process)d : %(message)s'
+
+MQ_PARSER_ADDRESS = 'localhost'
+MQ_PARSER_PORT = 5672
+
+MQ_DISPATCHER_ADDRESS = 'localhost'
+MQ_DISPATCHER_PORT = 5672

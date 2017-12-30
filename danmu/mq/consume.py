@@ -2,6 +2,7 @@ import pika
 import json
 from danmu.mq import RawProducer, StreamProducer
 from danmu.msg import RegexParser
+from danmu import settings
 
 
 class ParserConsumer(object):
@@ -24,7 +25,7 @@ class ParserConsumer(object):
         self.producer = StreamProducer()
 
     def callback(self, ch, method, properties, body):
-        doc = json.loads(body)
+        doc = json.loads(body.decode('utf-8'))
         try:
             msg = self.parser.parse(doc['raw'])
 
@@ -32,7 +33,6 @@ class ParserConsumer(object):
                 msg.update({'roomID': doc['rid'], 'time': doc['ts']})
                 self.producer.send(StreamProducer.ROUTE_STREAM + doc['rid'], json.dumps(msg))
 
-                print(msg)
         except pika.exceptions.ConnectionClosed:
             print('Reconnect.....Producer')
             self.producer = StreamProducer()
@@ -76,4 +76,4 @@ class DanmuConsumer(object):
 
 
 if __name__ == '__main__':
-    ParserConsumer().start()
+    ParserConsumer(host=settings.MQ_DISPATCHER_ADDRESS, port=settings.MQ_DISPATCHER_PORT).start()

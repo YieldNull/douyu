@@ -12,7 +12,6 @@ class RawProducer(object):
         self.channel.exchange_declare(exchange=self.EXCHANGE, exchange_type='direct')
 
     def send(self, route, msg):
-        print(msg)
         self.channel.basic_publish(exchange=self.EXCHANGE, routing_key=route, body=msg)
 
     def close(self):
