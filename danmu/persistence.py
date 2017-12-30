@@ -33,6 +33,7 @@ class FileStorage(Storage):
         self.thread.start()
 
     def handler_thread(self):
+        mq_error = False
         while True:
             doc = self.jobs.get(block=True)
 
@@ -52,8 +53,13 @@ class FileStorage(Storage):
                 self.fp.write(line)
                 self.logger.debug('Store ' + line)
 
-                self.producer.send(route=RawProducer.ROUTE_PARSER,
-                                   msg=json.dumps({'rid': doc['rid'], 'ts': doc['timestamp'], 'raw': raw}))
+                try:
+                    if not mq_error:
+                        self.producer.send(route=RawProducer.ROUTE_PARSER,
+                                           msg=json.dumps({'rid': doc['rid'], 'ts': doc['timestamp'], 'raw': raw}))
+                except Exception as e:
+                    self.logger.exception("\nError in sending msg to mq:%s\n" % repr(raw))
+                    mq_error = True
 
             except UnicodeDecodeError as e:
                 self.logger.debug(repr(e))
