@@ -2,6 +2,7 @@ import time
 import asyncio
 import os
 import threading
+import logging
 from functools import reduce
 from multiprocessing import Process, Pipe, Queue, cpu_count
 from danmu import settings, get_logger, persistence
@@ -238,11 +239,12 @@ class Scheduler(object):
 
 if __name__ == '__main__':
     import sys
-    import logging
+
+    root_logger = get_logger("ROOT")
 
 
     def excepthook(tp, value, traceback):
-        logging.exception("Uncaught exception:", exc_info=(tp, value, traceback))
+        root_logger.exception("Uncaught exception:", exc_info=(tp, value, traceback))
 
 
     sys.excepthook = excepthook

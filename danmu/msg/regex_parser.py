@@ -106,7 +106,7 @@ class RegexParser(Parser):
         badgelevel = self.__getBadgelv(msg)
         brid = self.__getBrid(msg)
         # self.dict[name] = [content, userlevel, badgename, badgelevel, time]
-        logging.info('{}:{}'.format(name, content))
+        # logging.info('{}:{}'.format(name, content))
         return {'username': name, 'content': content, 'userlevel': userlevel, 'badgename': badgename,
                 'badgelv': badgelevel, 'broomID': brid, 'type': type}
 
