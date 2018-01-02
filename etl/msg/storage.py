@@ -45,7 +45,8 @@ class TextStorage(object):
         user = self.get_or_create(User, name=msg['username'], defaults={'level': int(msg['userlevel'])})
         room = self.get_or_create(Room, rid=int(msg['roomID']))
 
-        self.create_danmu(TextDanmu, room=room, user=user, timestamp=msg['time'])
+        self.create_danmu(TextDanmu, room=room, user=user, timestamp=msg['time'],
+                          headers=['room', 'user', 'timestamp'])
 
     def _store_normal_gift(self, msg):
         user = self.get_or_create(User, name=msg['username'], defaults={'level': int(msg['userlevel'])})
@@ -53,7 +54,8 @@ class TextStorage(object):
 
         gift = self.get_or_create(Gift, name=msg['giftID'], defaults={'type': Gift.TYPE_NORMAL})
 
-        self.create_danmu(GiftDanmu, room=room, user=user, gift=gift, timestamp=msg['time'])
+        self.create_danmu(GiftDanmu, room=room, user=user, gift=gift, timestamp=msg['time'],
+                          headers=['room', 'user', 'gift', 'timestamp'])
 
     def _store_super_gift(self, msg):
         if msg['roomID'] != msg['droomID']:  # dup filter
@@ -63,7 +65,8 @@ class TextStorage(object):
         room = self.get_or_create(Room, rid=int(msg['roomID']))
         gift = self.get_or_create(Gift, name=msg['giftname'], defaults={'type': Gift.TYPE_SUPER})
 
-        self.create_danmu(GiftDanmu, room=room, user=user, gift=gift, timestamp=msg['time'])
+        self.create_danmu(GiftDanmu, room=room, user=user, gift=gift, timestamp=msg['time'],
+                          headers=['room', 'user', 'gift', 'timestamp'])
 
     def _store_u2u(self, msg):
         room = self.get_or_create(Room, rid=int(msg['roomID']))
@@ -72,16 +75,18 @@ class TextStorage(object):
         receiver = self.get_or_create(User, name=msg['rusername'])
 
         self.create_danmu(U2UDanmu, room=room, sender=sender, receiver=receiver,
-                          gift=gift, timestamp=msg['time'])
+                          gift=gift, timestamp=msg['time'],
+                          headers=['room', 'sender', 'receiver', 'gift', 'timestamp'])
 
     def _store_uenter(self, msg):
 
         user = self.get_or_create(User, name=msg['username'])
         room = self.get_or_create(Room, rid=int(msg['roomID']))
 
-        self.create_danmu(UEnterDanmu, room=room, user=user, timestamp=msg['time'])
+        self.create_danmu(UEnterDanmu, room=room, user=user, timestamp=msg['time'],
+                          headers=['room', 'user', 'timestamp'])
 
-    def create_danmu(self, model, **kwargs):
+    def create_danmu(self, model, headers, **kwargs):
         if model == TextDanmu:
             fd = self.fd_text
         elif model == GiftDanmu:
@@ -91,7 +96,7 @@ class TextStorage(object):
         else:
             fd = self.fd_uenter
 
-        fd.write('%s\n' % ('\t'.join([str(v) for v in kwargs.values()])))
+        fd.write('%s\n' % ('\t'.join([str(kwargs[h]) for h in headers])))
 
     def get_or_create(self, model, defaults=None, **kwargs):
 
