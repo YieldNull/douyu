@@ -1,15 +1,5 @@
-from peewee import Model, MySQLDatabase, CharField, IntegerField, \
-    DateTimeField, PrimaryKeyField, ForeignKeyField
-from etl import settings as conf
-
-db = MySQLDatabase(host=conf.MYSQL_HOST, port=conf.MYSQL_PORT,
-                   user=conf.MYSQL_USER, password=conf.MYSQL_PASSWD,
-                   database=conf.MYSQL_DB, charset='utf8mb4')
-
-
-class BaseModel(Model):
-    class Meta:
-        database = db
+from etl import BaseModel, db
+from peewee import CharField, IntegerField, DateTimeField, PrimaryKeyField, ForeignKeyField
 
 
 class Room(BaseModel):
