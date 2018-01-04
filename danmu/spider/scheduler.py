@@ -132,17 +132,20 @@ class Scheduler(object):
         def listen_pipe(looop):
             while True:
                 is_pending, rid = pipe.recv()
-                if is_pending:
-                    room = Room('Worker-{:d}'.format(wid), rid, storage)
-                    tasks[rid] = room
-                    asyncio.run_coroutine_threadsafe(self.process_task(queue, room, looop), looop)
+                try:
+                    if is_pending:
+                        room = Room('Worker-{:d}'.format(wid), rid, storage)
+                        tasks[rid] = room
+                        asyncio.run_coroutine_threadsafe(self.process_task(queue, room, looop), looop)
 
-                    room.logger.info('Received task')
-                else:
-                    tasks[rid].logger.info('Canceling task')
-                    tasks[rid].is_canceled = True
-                    tasks[rid].writer.close()
-                    tasks.pop(rid)
+                        room.logger.info('Received task')
+                    else:
+                        tasks[rid].logger.info('Canceling task')
+                        tasks[rid].is_canceled = True
+                        tasks[rid].writer.close()
+                        tasks.pop(rid)
+                except:
+                    self.logger.exception('Exception in ROOM Scheduler')
 
         loop = asyncio.get_event_loop()
 
