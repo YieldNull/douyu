@@ -1,9 +1,10 @@
-from peewee import Model, MySQLDatabase
+from peewee import Model
 from etl import settings as conf
+from playhouse.pool import PooledMySQLDatabase
 
-db = MySQLDatabase(host=conf.MYSQL_HOST, port=conf.MYSQL_PORT,
-                   user=conf.MYSQL_USER, password=conf.MYSQL_PASSWD,
-                   database=conf.MYSQL_DB, charset='utf8mb4')
+db = PooledMySQLDatabase(host=conf.MYSQL_HOST, port=conf.MYSQL_PORT,
+                         user=conf.MYSQL_USER, password=conf.MYSQL_PASSWD,
+                         database=conf.MYSQL_DB, charset='utf8mb4', max_connections=20)
 
 
 class BaseModel(Model):
