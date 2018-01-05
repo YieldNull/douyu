@@ -1,30 +1,34 @@
 #!/usr/bin/env bash
 
-mkdir results
+dir=$(dirname "$0")
+dest=$1
+urls=$2
+date=$3
 
-while read -u 11 date; do
-    mkdir "./splits"
-    mkdir "./results-tmp"
+mkdir -p "$dest"
 
-    while read -u 10 url; do
-        echo $url
-        wget -q $url
-        bz=`basename $url`
-        tar xvf $bz --strip-components=3
-        name="${bz%.*}"
-        split -l 10000 $name "./splits/${name%.*}"
+mkdir "$dest/splits"
+mkdir "$dest/results-tmp"
 
-        rm $bz
-        rm $name
-    done 10<"$date".txt
+while read -u 10 url; do
+    echo $url
+    wget -q $url
+    bz=`basename $url`
+    tar xvf $bz --strip-components=3
+    name="${bz%.*}"
+    split -l 10000 $name "$dest/splits/${name%.*}"
 
-    $1 "./splits" "./results-tmp"
+    rm $bz
+    rm $name
+done 10<"$urls"
 
-    find "./results-tmp" -name "*$date*_text.txt" | xargs cat >> ./results/"$date"_text.txt
-    find "./results-tmp" -name "*$date*_gift.txt" | xargs cat >> ./results/"$date"_gift.txt
-    find "./results-tmp" -name "*$date*_u2u.txt" | xargs cat >> ./results/"$date"_u2u.txt
-    find "./results-tmp" -name "*$date*_uenter.txt" | xargs cat >> ./results/"$date"_uenter.txt
+python3 "$dir/raw2rds.py" "$dest/splits" "$dest/results-tmp"
 
-    rm -rf "./splits"
-    rm -rf "./results-tmp"
-done 11<dates.txt
+find "$dest/results-tmp" -name "*$date*_text.txt" | xargs cat >> $dest/"$date"_text.txt
+find "$dest/results-tmp" -name "*$date*_gift.txt" | xargs cat >> $dest/"$date"_gift.txt
+find "$dest/results-tmp" -name "*$date*_u2u.txt" | xargs cat >> $dest/"$date"_u2u.txt
+find "$dest/results-tmp" -name "*$date*_uenter.txt" | xargs cat >> $dest/"$date"_uenter.txt
+find "$dest/results-tmp" -name "*$date*_new_user.txt" | xargs cat >> $dest/"$date"_new_user.txt
+
+rm -rf "$dest/splits"
+rm -rf "$dest/results-tmp"

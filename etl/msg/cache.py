@@ -1,11 +1,16 @@
 import redis
 import pickle
+from etl import settings
 
 
 class RedisClient(object):
 
-    def __init__(self):
+    def __init__(self, file_prefix):
         self.client = redis.StrictRedis(decode_responses=True)
+        self.fd_user = open(file_prefix + '_new_user.txt', 'w', encoding='utf-8')
+
+    def close(self):
+        self.fd_user.close()
 
     def save_user(self, name, level):
         key = 'u:{}'.format(name)
@@ -13,7 +18,8 @@ class RedisClient(object):
         return self._incr_and_save(key,
                                    self._incr_user_id,
                                    lambda id_: pickle.dumps((id_, level)),
-                                   lambda v: v[0])
+                                   lambda v: v[0],
+                                   lambda id_: '%s\t%s\t%s' % (str(id_), key[2:], str(level)))
 
     def update_user(self, id_, name, level):
         return self.client.set('u:{}'.format(name), pickle.dumps((id_, level)))
@@ -64,10 +70,12 @@ class RedisClient(object):
     def _incr_room_id(self):
         return self.client.incr('rid')
 
-    def _incr_and_save(self, key, func_incr, func_value, func_load):
+    def _incr_and_save(self, key, func_incr, func_value, func_load, func_csv=None):
         id_ = func_incr()
 
         if self.client.setnx(key, func_value(id_)):
+            if settings.SAVE_NEW_ITEM and func_csv is not None:
+                self.fd_user.write('%s\n' % (func_csv(id_)))
             return id_
         else:
             return func_load(self.client.get(key))

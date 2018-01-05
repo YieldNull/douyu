@@ -131,6 +131,6 @@ class RDS(object):
 if __name__ == '__main__':
     import sys
 
-    print("Parsing %s" % sys.argv[1])
-    rds = RDS('/Users/junjie/Downloads/etl/dest', datetime.datetime.strptime(sys.argv[1], "%Y_%m_%d"))
+    print("Parsing %s" % sys.argv[2])
+    rds = RDS(sys.argv[1], datetime.datetime.strptime(sys.argv[2], "%Y_%m_%d"))
     rds.store()

@@ -9,7 +9,7 @@ class TextStorage(object):
         self.file_prefix = file_prefix
         self.logger = logging.getLogger('TextStorage-%s' % self.file_prefix)
 
-        self.redis = RedisClient()
+        self.redis = RedisClient(file_prefix)
 
         self.fd_text = open(self.file_prefix + '_text.txt', 'w', buffering=1024 * 128, encoding='utf-8')
         self.fd_gift = open(self.file_prefix + '_gift.txt', 'w', buffering=1024 * 128, encoding='utf-8')
@@ -40,6 +40,7 @@ class TextStorage(object):
         self.fd_gift.close()
         self.fd_uenter.close()
         self.fd_u2u.close()
+        self.redis.close()
 
     def _store_text(self, msg):
         user = self.get_or_create(User, name=msg['username'], defaults={'level': int(msg['userlevel'])})

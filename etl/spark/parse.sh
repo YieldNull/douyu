@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
 
-mkdir -p "/Users/junjie/Downloads/etl/dest"
+dir=$(dirname "$0")
 
-while read -u 10 date; do
-    spark-submit --class ETL --master "local[*]" target/scala-2.11/danmuetl_2.11-1.0.jar \
-    file:///Users/junjie/Downloads/etl/rdb/gift_with_price.csv \
-    file:///Users/junjie/Downloads/etl/trans \
-    file:///Users/junjie/Downloads/etl/spark $date
+gift=$1
+repo=$2
+export dest=$3
+date=$4
 
-    find /Users/junjie/Downloads/etl/spark -name '*.csv' | \
-    xargs -I {} bash -c 'export f={} && export d=`dirname $f` && export name=`basename $d` && mv $f /Users/junjie/Downloads/etl/dest/$name.csv && rm -rf $d'
+mkdir -p $dest
 
-    export PYTHONPATH=../../ && python3 ../warehouse/facts.py $date
-done 10<dates.txt
+spark-submit --class ETL --master "local[*]" "$dir/target/scala-2.11/danmuetl_2.11-1.0.jar" \
+    "file://$gift" \
+    "file://$repo" \
+    "file://$dest/spark-tmp" $date
+
+find "$dest/spark-tmp" -name '*.csv' | \
+xargs -I {} bash -c 'export f={} && export d=`dirname $f` && export name=`basename $d` && mv $f $dest/$name.csv'
+
+
+rm -rf  "$dest/spark-tmp"
