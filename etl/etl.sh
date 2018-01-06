@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 dir=$(dirname "$0")
-date=$1
+repo=$1
+date=$2
+
+mkdir -p "$repo"
 
 export PYTHONPATH="$dir/../"
 
-repo="$dir/repo"
-mkdir -p "$repo"
 
 rm -r "$repo/dates"
 mkdir -p "$repo/dates"

@@ -6,7 +6,7 @@ from etl import settings
 class RedisClient(object):
 
     def __init__(self, file_prefix):
-        self.client = redis.StrictRedis(decode_responses=True)
+        self.client = redis.StrictRedis()
         self.fd_user = open(file_prefix + '_new_user.txt', 'w', encoding='utf-8')
 
     def close(self):
@@ -18,7 +18,7 @@ class RedisClient(object):
         return self._incr_and_save(key,
                                    self._incr_user_id,
                                    lambda id_: pickle.dumps((id_, level)),
-                                   lambda v: v[0],
+                                   lambda v: pickle.loads(v)[0],
                                    lambda id_: '%s\t%s\t%s' % (str(id_), key[2:], str(level)))
 
     def update_user(self, id_, name, level):
@@ -34,10 +34,10 @@ class RedisClient(object):
         return self._incr_and_save(key,
                                    self._incr_gift_id,
                                    lambda id_: id_,
-                                   lambda x: x)
+                                   lambda v: v.decode('utf-8'))
 
     def get_gift_normal(self, name):
-        return self.client.get('gn:{}'.format(name))
+        return self.client.get('gn:{}'.format(name)).decode('utf-8')
 
     def save_gift_super(self, name):
         key = 'gs:{}'.format(name)
@@ -45,10 +45,10 @@ class RedisClient(object):
         return self._incr_and_save(key,
                                    self._incr_gift_id,
                                    lambda id_: id_,
-                                   lambda x: x)
+                                   lambda v: v.decode('utf-8'))
 
     def get_gift_super(self, name):
-        return self.client.get('gs:{}'.format(name))
+        return self.client.get('gs:{}'.format(name)).decode('utf-8')
 
     def save_gift_u2u(self, name):
         key = 'gu:{}'.format(name)
@@ -56,10 +56,10 @@ class RedisClient(object):
         return self._incr_and_save(key,
                                    self._incr_gift_id,
                                    lambda id_: id_,
-                                   lambda x: x)
+                                   lambda v: v.decode('utf-8'))
 
     def get_gift_u2u(self, name):
-        return self.client.get('gu:{}'.format(name))
+        return self.client.get('gu:{}'.format(name)).decode('utf-8')
 
     def _incr_user_id(self):
         return self.client.incr('uid')

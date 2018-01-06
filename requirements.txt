@@ -1,14 +1,11 @@
-motor
 requests
 oss2
 peewee
 PyMySQL
 pika
 redis
-aioredis
 Flask
 pymongo
 scrapy
 scrapy-random-useragent
-aiofiles
 pandas

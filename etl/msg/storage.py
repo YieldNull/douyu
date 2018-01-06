@@ -56,7 +56,7 @@ class TextStorage(object):
         gift = self.get_or_create(Gift, name=msg['giftID'], defaults={'type': Gift.TYPE_NORMAL})
 
         self.create_danmu(GiftDanmu, room=room, user=user, gift=gift, timestamp=msg['time'],
-                          headers=['room', 'user', 'gift', 'timestamp'])
+                          headers=['room', 'user', 'timestamp', 'gift'])
 
     def _store_super_gift(self, msg):
         if msg['roomID'] != msg['droomID']:  # dup filter
@@ -67,7 +67,7 @@ class TextStorage(object):
         gift = self.get_or_create(Gift, name=msg['giftname'], defaults={'type': Gift.TYPE_SUPER})
 
         self.create_danmu(GiftDanmu, room=room, user=user, gift=gift, timestamp=msg['time'],
-                          headers=['room', 'user', 'gift', 'timestamp'])
+                          headers=['room', 'user', 'timestamp', 'gift'])
 
     def _store_u2u(self, msg):
         room = self.get_or_create(Room, rid=int(msg['roomID']))
