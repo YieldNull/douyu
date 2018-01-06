@@ -1,19 +1,19 @@
 import pika
 import json
-from danmu.mq import RawProducer, StreamProducer
 from danmu.msg import RegexParser
 from danmu import settings
+from mq.produce import RawProducer, StreamProducer
 
 
 class ParserConsumer(object):
-    def __init__(self, host='localhost', port=5672):
+    def __init__(self, host='localhost', port=5672, msg_handler=None):
         self.conn = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
         self.channel = self.conn.channel()
 
         self.channel.exchange_declare(exchange=RawProducer.EXCHANGE, exchange_type='direct')
 
         queue_name = 'danmu.queue.raw'
-        self.channel.queue_declare(queue=queue_name, auto_delete=True)
+        self.channel.queue_declare(queue=queue_name)
 
         self.channel.queue_bind(exchange=RawProducer.EXCHANGE,
                                 queue=queue_name,
@@ -24,6 +24,8 @@ class ParserConsumer(object):
 
         self.producer = StreamProducer()
 
+        self.msg_handler = msg_handler
+
     def callback(self, ch, method, properties, body):
         doc = json.loads(body.decode('utf-8'))
         try:
@@ -31,6 +33,10 @@ class ParserConsumer(object):
 
             if msg['type'] != 'other':
                 msg.update({'roomID': doc['rid'], 'time': doc['ts']})
+
+                if self.msg_handler is not None:
+                    self.msg_handler(msg)
+
                 self.producer.send(StreamProducer.ROUTE_STREAM + doc['rid'], json.dumps(msg))
 
         except pika.exceptions.ConnectionClosed:

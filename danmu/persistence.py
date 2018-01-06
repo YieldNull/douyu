@@ -2,7 +2,7 @@ import time
 import threading
 import queue
 import json
-from danmu.mq import RawProducer
+from mq import RawProducer
 from danmu import settings, get_logger
 
 

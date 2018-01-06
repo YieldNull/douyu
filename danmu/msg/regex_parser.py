@@ -107,8 +107,9 @@ class RegexParser(Parser):
         brid = self.__getBrid(msg)
         # self.dict[name] = [content, userlevel, badgename, badgelevel, time]
         # logging.info('{}:{}'.format(name, content))
-        return {'username': name, 'content': content, 'userlevel': userlevel, 'badgename': badgename,
-                'badgelv': badgelevel, 'broomID': brid, 'type': type}
+        return {'username': name, 'content': content, 'userlevel': userlevel,
+                'badgename': badgename if badgename else '',
+                'badgelv': badgelevel if badgelevel else '0', 'broomID': brid, 'type': type}
 
     '''
     type:uenter
@@ -136,8 +137,10 @@ class RegexParser(Parser):
         badgename = self.__getBadgeName(msg)
         badgelevel = self.__getBadgelv(msg)
         brid = self.__getBrid(msg)
-        return {'username': name, 'userlevel': userlevel, 'giftID': giftId, 'badgename': badgename,
-                'badgelv': badgelevel, 'broomID': brid, 'type': type}
+        return {'username': name, 'userlevel': userlevel, 'giftID': giftId,
+                'badgename': badgename if badgename else '',
+                'badgelv': badgelevel if badgelevel else '0',
+                'broomID': brid, 'type': type}
 
     '''
     type:spbc
