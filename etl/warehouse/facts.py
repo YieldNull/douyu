@@ -28,7 +28,8 @@ class RDS(object):
         self.executor.shutdown(wait=True)
 
     def _store_room_top_user_hourly(self):
-        df = pd.read_csv(os.path.join(self.repo, '%s_room_top_user_hourly.csv' % self.date.strftime("%Y_%m_%d")))
+        date_str = self.date.strftime("%Y_%m_%d")
+        df = pd.read_csv(os.path.join(self.repo, '%s_room_top_user_hourly.csv' % date_str))
 
         for index, row in df.iterrows():
             try:
@@ -45,10 +46,11 @@ class RDS(object):
                                          dcount=row['dcount'], gcount=row['gcount'],
                                          expense=row['expense'])
             except Exception:
-                self.logger.exception("ROOM TOP USER HOURLY")
+                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
 
     def _store_room_top_user_daily(self):
-        df = pd.read_csv(os.path.join(self.repo, '%s_room_top_user_daily.csv' % self.date.strftime("%Y_%m_%d")))
+        date_str = self.date.strftime("%Y_%m_%d")
+        df = pd.read_csv(os.path.join(self.repo, '%s_room_top_user_daily.csv' % date_str))
 
         for index, row in df.iterrows():
             try:
@@ -63,10 +65,11 @@ class RDS(object):
                                         dcount=row['dcount'], gcount=row['gcount'],
                                         expense=row['expense'])
             except Exception:
-                self.logger.exception("ROOM TOP USER DAILY")
+                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
 
     def _store_site_top_user_hourly(self):
-        df = pd.read_csv(os.path.join(self.repo, '%s_site_top_user_hourly.csv' % self.date.strftime("%Y_%m_%d")))
+        date_str = self.date.strftime("%Y_%m_%d")
+        df = pd.read_csv(os.path.join(self.repo, '%s_site_top_user_hourly.csv' % date_str))
 
         for index, row in df.iterrows():
             try:
@@ -78,10 +81,11 @@ class RDS(object):
                                          dcount=row['dcount'], gcount=row['gcount'],
                                          expense=row['expense'])
             except Exception:
-                self.logger.exception("SITE TOP USER HOURLY")
+                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
 
     def _store_site_top_user_daily(self):
-        df = pd.read_csv(os.path.join(self.repo, '%s_site_top_user_daily.csv' % self.date.strftime("%Y_%m_%d")))
+        date_str = self.date.strftime("%Y_%m_%d")
+        df = pd.read_csv(os.path.join(self.repo, '%s_site_top_user_daily.csv' % date_str))
 
         for index, row in df.iterrows():
             try:
@@ -92,10 +96,11 @@ class RDS(object):
                                         dcount=row['dcount'], gcount=row['gcount'],
                                         expense=row['expense'])
             except Exception:
-                self.logger.exception("SITE TOP USER DAILY")
+                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
 
     def _store_room_stat_hourly(self):
-        df = pd.read_csv(os.path.join(self.repo, '%s_room_hourly.csv' % self.date.strftime("%Y_%m_%d")))
+        date_str = self.date.strftime("%Y_%m_%d")
+        df = pd.read_csv(os.path.join(self.repo, '%s_room_hourly.csv' % date_str))
 
         for index, row in df.iterrows():
             try:
@@ -109,10 +114,11 @@ class RDS(object):
                                       ucount=row['ucount'], ducount=row['ducount'], gucount=row['gucount'],
                                       dcount=row['dcount'], gcount=row['gcount'], income=row['income'])
             except Exception:
-                self.logger.exception("ROOM STAT HOURLY")
+                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
 
     def _store_room_stat_daily(self):
-        df = pd.read_csv(os.path.join(self.repo, '%s_room_daily.csv' % self.date.strftime("%Y_%m_%d")))
+        date_str = self.date.strftime("%Y_%m_%d")
+        df = pd.read_csv(os.path.join(self.repo, '%s_room_daily.csv' % date_str))
 
         for index, row in df.iterrows():
             try:
@@ -125,10 +131,11 @@ class RDS(object):
                                      ucount=row['ucount'], ducount=row['ducount'], gucount=row['gucount'],
                                      dcount=row['dcount'], gcount=row['gcount'], income=row['income'])
             except Exception:
-                self.logger.exception("ROOM STAT DAILY")
+                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
 
     def _store_site_stat_hourly(self):
-        df = pd.read_csv(os.path.join(self.repo, '%s_site_hourly.csv' % self.date.strftime("%Y_%m_%d")))
+        date_str = self.date.strftime("%Y_%m_%d")
+        df = pd.read_csv(os.path.join(self.repo, '%s_site_hourly.csv' % date_str))
 
         for index, row in df.iterrows():
             try:
@@ -139,10 +146,11 @@ class RDS(object):
                                       ucount=row['ucount'], ducount=row['ducount'], gucount=row['gucount'],
                                       dcount=row['dcount'], gcount=row['gcount'], income=row['income'])
             except Exception:
-                self.logger.exception("SITE STAT HOURLY")
+                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
 
     def _store_site_stat_daily(self):
-        df = pd.read_csv(os.path.join(self.repo, '%s_site_daily.csv' % self.date.strftime("%Y_%m_%d")))
+        date_str = self.date.strftime("%Y_%m_%d")
+        df = pd.read_csv(os.path.join(self.repo, '%s_site_daily.csv' % date_str))
 
         for index, row in df.iterrows():
             try:
@@ -152,7 +160,7 @@ class RDS(object):
                                      ucount=row['ucount'], ducount=row['ducount'], gucount=row['gucount'],
                                      dcount=row['dcount'], gcount=row['gcount'], income=row['income'])
             except Exception:
-                self.logger.exception("SITE STAT DAILY")
+                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
 
 
 if __name__ == '__main__':

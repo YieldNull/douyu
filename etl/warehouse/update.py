@@ -11,24 +11,25 @@ def update_user(path):
     df = pd.read_csv(path, sep='\t', encoding='utf-8', quoting=csv.QUOTE_NONE, names=['user', 'name', 'level'])
 
     for index, row in df.iterrows():
+        uid = int(row['user'])
+        name = row['name']
         try:
-            uid = int(row['user'])
-            name = row['name']
-            try:
-                level = int(row['level'])
-            except:  # \t in name
-                level = 0
+            level = int(row['level'])
+        except:  # \t in name
+            level = 0
+
+        try:
 
             User.create(user_key=uid, user_id=uid, name=name, level=level)
         except Exception:
-            logger.exception("UPDATE USER")
+            logger.exception('path:{} index:{} uid:{} name:{} level:{}'.format(path, index, uid, name, level))
 
 
 def update_gift(path):
     try:
         store_gift(path)
     except Exception:
-        logger.exception("UPDATE GIFT")
+        logger.exception('UPDATE GIFT {}'.format(path))
 
 
 if __name__ == '__main__':
@@ -36,5 +37,4 @@ if __name__ == '__main__':
 
     update_gift(sys.argv[1])
 
-    if len(sys.argv) > 2:
-        update_user(sys.argv[2])
+    update_user(sys.argv[2])
