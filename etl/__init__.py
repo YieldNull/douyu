@@ -1,4 +1,4 @@
-import logging
+import common
 from peewee import Model
 from etl import settings as conf
 from playhouse.pool import PooledMySQLDatabase
@@ -13,15 +13,5 @@ class BaseModel(Model):
         database = db
 
 
-def get_logger(name, format_str=conf.LOGGING_BASIC_FORMATTER):
-    logger = logging.getLogger(name)
-
-    if len(logger.handlers) == 0:
-        handler = logging.FileHandler(conf.LOGGING_FILE_NAME)
-        handler.setFormatter(logging.Formatter(format_str))
-        handler.setLevel(conf.LOGGING_LEVEL)
-
-        logger.addHandler(handler)
-        logger.setLevel(conf.LOGGING_LEVEL)
-
-    return logger
+def get_logger(name):
+    return common.get_logger(name, file_name=conf.LOGGING_FILE_NAME)

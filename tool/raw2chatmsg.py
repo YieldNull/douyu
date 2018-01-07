@@ -1,6 +1,6 @@
 import sys
 import os
-from danmu.msg import RegexParser
+from common.parser import RegexParser
 
 if __name__ == '__main__':
     parent = sys.argv[1]

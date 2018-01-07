@@ -2,8 +2,7 @@ import os
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from danmu.msg import RegexParser
-from etl.msg import parse_raw
+from common.parser import RegexParser, parse_raw
 from etl.msg.storage import TextStorage
 
 

@@ -1,6 +1,6 @@
 *.pyc
 __pycache__/
 .idea
-tool/settings.py
 .DS_Store
-etl/settings.py
+etl/gift.csv
+*/settings.py

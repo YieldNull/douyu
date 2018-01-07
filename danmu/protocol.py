@@ -1,5 +1,4 @@
 import struct
-from danmu.msg import Parser
 
 
 class Protocol(object):
@@ -25,9 +24,3 @@ class Protocol(object):
         length = length - self.header_pseudo_size
 
         return msg_type, length
-
-    def unpack_payload(self, parser: Parser, payload: bytes) -> dict:
-        payload, zero = struct.unpack_from('{:d}sB'.format(len(payload) - 1), payload)
-        payload = payload.decode('utf-8')
-
-        return parser.parse(payload)

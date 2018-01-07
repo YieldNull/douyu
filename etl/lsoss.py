@@ -27,7 +27,7 @@ def urls_group_by_date(repo, today):
         date = re.search('.*?_(\w+).txt.bz', obj.key).group(1)
 
         if date == today or today is None:
-            with open(os.path.join(repo, '%s.txt' % date), 'w', encoding='utf-8') as fout:
+            with open(os.path.join(repo, '%s.txt' % date), 'a', encoding='utf-8') as fout:
                 url = 'http://%s/%s' % (local.OSS_DOMAIN, obj.key)
                 fout.write('%s\n' % url)
 

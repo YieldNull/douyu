@@ -5,11 +5,11 @@ import threading
 import logging
 from functools import reduce
 from multiprocessing import Process, Pipe, Queue, cpu_count
-from danmu import settings, get_logger, persistence
-from danmu.spider import indexing
-from danmu.msg import Protocol
-from danmu.persistence import Storage
-from danmu.redis import RedisClient
+from danmu import settings, get_logger
+from danmu import indexing
+from danmu.protocol import Protocol
+from danmu.persistence import FileStorage, Storage
+from common.ws import RedisClient
 
 """
 https://yieldnull.com/blog/f9a25fe711158017f5bf82b0ab41f3dcd114bc7a/
@@ -105,10 +105,7 @@ class Room(object):
 
         msg = {'rid': self.rid, 'timestamp': time.time(), 'payload': payload}
 
-        if settings.STORAGE_ASYNC:
-            await self.storage.store(msg)
-        else:
-            self.storage.store(msg)
+        self.storage.store(msg)
 
         self.counter.incr()
 
@@ -127,7 +124,7 @@ class Scheduler(object):
 
     def process_main(self, wid, pipe: Pipe, queue: Queue):
         tasks = {}
-        storage = getattr(persistence, settings.STORAGE_CLASS)('Storage-{:d}'.format(wid))
+        storage = FileStorage('Storage-{:d}'.format(wid))
 
         def listen_pipe(looop):
             while True:
@@ -142,7 +139,11 @@ class Scheduler(object):
                     else:
                         tasks[rid].logger.info('Canceling task')
                         tasks[rid].is_canceled = True
-                        tasks[rid].writer.close()
+                        try:
+                            tasks[rid].writer.close()
+                        except Exception as e:
+                            self.logger.warning('Error in closing writer: %s' % repr(e))
+
                         tasks.pop(rid)
                 except:
                     self.logger.exception('Exception in ROOM Scheduler')

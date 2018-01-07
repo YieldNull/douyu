@@ -11,7 +11,7 @@ export PYTHONPATH="$dir/../"
 
 rm -r "$repo/dates"
 mkdir -p "$repo/dates"
-python3 "$dir/../tool/lsoss.py" "$repo/dates" "$date"
+python3 "$dir/lsoss.py" "$repo/dates" "$date"
 
 bash "$dir/msg/raw2rds.sh" "$repo/parsed" "$repo/dates/$date.txt" "$date"
 

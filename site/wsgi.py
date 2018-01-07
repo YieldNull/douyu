@@ -6,7 +6,7 @@ import requests
 
 from flask import Flask, render_template, jsonify, abort, url_for
 from settings import MONGO_DATABASE, MONGO_URI, PAGINATE_BY
-from danmu.redis import RedisClient
+from common.ws import RedisClient
 
 app = Flask(__name__)
 

@@ -2,7 +2,7 @@ import time
 import threading
 import queue
 import json
-from mq import RawProducer
+from common.mq import RawProducer
 from danmu import settings, get_logger
 
 
@@ -27,13 +27,14 @@ class FileStorage(Storage):
         self.jobs = queue.Queue()
         self.logger = get_logger(name)
 
-        self.producer = RawProducer(host=settings.MQ_PARSER_ADDRESS, port=settings.MQ_PARSER_PORT)
+        self.producer = RawProducer(get_logger('RawProducer'),
+                                    host=settings.MQ_PARSER_ADDRESS,
+                                    port=settings.MQ_PARSER_PORT)
 
         self.thread = threading.Thread(target=self.handler_thread)
         self.thread.start()
 
     def handler_thread(self):
-        mq_error = False
         while True:
             doc = self.jobs.get(block=True)
 
@@ -53,13 +54,7 @@ class FileStorage(Storage):
                 self.fp.write(line)
                 self.logger.debug('Store ' + line)
 
-                try:
-                    if not mq_error:
-                        self.producer.send(route=RawProducer.ROUTE_PARSER,
-                                           msg=json.dumps({'rid': doc['rid'], 'ts': doc['timestamp'], 'raw': raw}))
-                except Exception as e:
-                    self.logger.exception("\nError in sending msg to mq:%s\n" % repr(raw))
-                    mq_error = True
+                self.producer.send(json.dumps({'rid': doc['rid'], 'ts': doc['timestamp'], 'raw': raw}))
 
             except UnicodeDecodeError as e:
                 self.logger.debug(repr(e))
