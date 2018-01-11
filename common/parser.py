@@ -267,6 +267,83 @@ class MsgCsvStorage(object):
         )
 
 
+class MsgParser(object):
+    def __init__(self, mtype):
+        self._parser = None
+        if mtype == 'gift':
+            self._parser = self._parse_gift
+        elif mtype == 'text':
+            self._parser = self._parse_text
+        elif mtype == 'sgift':
+            self._parser = self._parse_sgift
+        elif mtype == 'u2u':
+            self._parser = self._parse_u2u
+        elif mtype == 'uenter':
+            self._parser = self._parse_uenter
+
+    def parse(self, line):
+        fields = line.split('\t')
+        fields[-1] = fields[-1][:-1]
+
+        return self._parser(fields)
+
+    def _parse_text(self, fields):
+        return {
+            'type': 'chatmsg',
+            'time': fields[0],
+            'roomID': fields[1],
+            'username': fields[2],
+            'userlevel': fields[3],
+            'badgename': fields[4],
+            'badgelv': fields[5],
+            'broomID': fields[6],
+            'content': fields[7]
+        }
+
+    def _parse_gift(self, fields):
+        return {
+            'type': 'dgb',
+            'time': fields[0],
+            'roomID': fields[1],
+            'username': fields[2],
+            'userlevel': fields[3],
+            'badgename': fields[4],
+            'badgelv': fields[5],
+            'broomID': fields[6],
+            'giftID': fields[7]
+        }
+
+    def _parse_sgift(self, fields):
+        return {
+            'type': 'spbc',
+            'time': fields[0],
+            'roomID': fields[1],
+            'droomID': fields[2],
+            'username': fields[3],
+            'giftname': fields[4],
+            'aname': fields[5]
+        }
+
+    def _parse_u2u(self, fields):
+        return {
+            'type': 'gpbc',
+            'time': fields[0],
+            'roomID': fields[1],
+            'username': fields[2],
+            'rusername': fields[3],
+            'pnm': fields[4]
+        }
+
+    def _parse_uenter(self, fields):
+        return {
+            'type': 'uenter',
+            'time': fields[0],
+            'roomID': fields[1],
+            'username': fields[2],
+            'userlevel': fields[3]
+        }
+
+
 def parse_raw(parser, line):
     first_space = line.find(' ')
     second_space = line.find(' ', first_space + 1)
