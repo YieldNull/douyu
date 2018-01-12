@@ -1,12 +1,25 @@
 from etl import BaseModel, db
-from peewee import IntegerField, PrimaryKeyField, ForeignKeyField, CharField, SQL
+from peewee import IntegerField, PrimaryKeyField, ForeignKeyField, CharField, CompositeKey, BigIntegerField
+
+TOP_TYPE_DCOUNT = 1
+TOP_TYPE_GCOUNT = 2
+TOP_TYPE_EXPENSE = 3
+
+
+class RoomCateMap(BaseModel):
+    room_key = IntegerField(index=True)
+    cate_key = IntegerField(index=True)
+
+    class Meta:
+        db_table = 'map_room_cate'
+        primary_key = CompositeKey('room_key', 'cate_key')
 
 
 class User(BaseModel):
     user_key = IntegerField(primary_key=True)
-    user_id = IntegerField()
-    name = CharField(index=True)
-    level = IntegerField()
+    user_id = IntegerField(unique=True)
+    name = CharField(null=True)
+    level = IntegerField(null=True)
 
     class Meta:
         db_table = 'dw_dim_user'
@@ -14,12 +27,21 @@ class User(BaseModel):
 
 class Room(BaseModel):
     room_key = PrimaryKeyField()
-    room_id = IntegerField()
+    room_id = IntegerField(unique=True)
     name = CharField(null=True)
     anchor = CharField(null=True)
 
     class Meta:
         db_table = 'dw_dim_room'
+
+
+class RoomCate(BaseModel):
+    cate_key = PrimaryKeyField()
+    cate_id = IntegerField(unique=True)
+    name = CharField()
+
+    class Meta:
+        db_table = 'dw_dim_cate'
 
 
 class Hour(BaseModel):
@@ -48,23 +70,10 @@ class UserRoomHourlyStat(BaseModel):
     hour_key = ForeignKeyField(Hour, to_field=Hour.hour_key, db_column='hour_key')
     dcount = IntegerField()
     gcount = IntegerField()
-    expense = IntegerField()
+    expense = BigIntegerField()
 
     class Meta:
         db_table = 'dw_fact_user_room_hourly'
-
-
-class RoomHourlyTopUser(BaseModel):
-    room_key = ForeignKeyField(Room, to_field=Room.room_key, db_column='room_key')
-    user_key = ForeignKeyField(User, to_field=User.user_key, db_column='user_key')
-    date_key = ForeignKeyField(Date, to_field=Date.date_key, db_column='date_key')
-    hour_key = ForeignKeyField(Hour, to_field=Hour.hour_key, db_column='hour_key')
-    dcount = IntegerField()
-    gcount = IntegerField()
-    expense = IntegerField()
-
-    class Meta:
-        db_table = 'dw_fact_room_top_user_hourly'
 
 
 class RoomDailyTopUser(BaseModel):
@@ -73,22 +82,11 @@ class RoomDailyTopUser(BaseModel):
     date_key = ForeignKeyField(Date, to_field=Date.date_key, db_column='date_key')
     dcount = IntegerField()
     gcount = IntegerField()
-    expense = IntegerField()
+    expense = BigIntegerField()
+    ttype = IntegerField()
 
     class Meta:
         db_table = 'dw_fact_room_top_user_daily'
-
-
-class SiteHourlyTopUser(BaseModel):
-    user_key = ForeignKeyField(User, to_field=User.user_key, db_column='user_key')
-    date_key = ForeignKeyField(Date, to_field=Date.date_key, db_column='date_key')
-    hour_key = ForeignKeyField(Hour, to_field=Hour.hour_key, db_column='hour_key')
-    dcount = IntegerField()
-    gcount = IntegerField()
-    expense = IntegerField()
-
-    class Meta:
-        db_table = 'dw_fact_site_top_user_hourly'
 
 
 class SiteDailyTopUser(BaseModel):
@@ -96,7 +94,8 @@ class SiteDailyTopUser(BaseModel):
     date_key = ForeignKeyField(Date, to_field=Date.date_key, db_column='date_key')
     dcount = IntegerField()
     gcount = IntegerField()
-    expense = IntegerField()
+    expense = BigIntegerField()
+    ttype = IntegerField()
 
     class Meta:
         db_table = 'dw_fact_site_top_user_daily'
@@ -104,6 +103,7 @@ class SiteDailyTopUser(BaseModel):
 
 class RoomHourlyStat(BaseModel):
     room_key = ForeignKeyField(Room, to_field=Room.room_key, db_column='room_key')
+    cate_key = ForeignKeyField(RoomCate, to_field=RoomCate.cate_key, db_column='cate_key')
     date_key = ForeignKeyField(Date, to_field=Date.date_key, db_column='date_key')
     hour_key = ForeignKeyField(Hour, to_field=Hour.hour_key, db_column='hour_key')
     ucount = IntegerField()
@@ -111,7 +111,7 @@ class RoomHourlyStat(BaseModel):
     gucount = IntegerField()
     dcount = IntegerField()
     gcount = IntegerField()
-    income = IntegerField()
+    income = BigIntegerField()
 
     class Meta:
         db_table = 'dw_fact_room_hourly'
@@ -119,13 +119,14 @@ class RoomHourlyStat(BaseModel):
 
 class RoomDailyStat(BaseModel):
     room_key = ForeignKeyField(Room, to_field=Room.room_key, db_column='room_key')
+    cate_key = ForeignKeyField(RoomCate, to_field=RoomCate.cate_key, db_column='cate_key')
     date_key = ForeignKeyField(Date, to_field=Date.date_key, db_column='date_key')
     ucount = IntegerField()
     ducount = IntegerField()
     gucount = IntegerField()
     dcount = IntegerField()
     gcount = IntegerField()
-    income = IntegerField()
+    income = BigIntegerField()
 
     class Meta:
         db_table = 'dw_fact_room_daily'
@@ -139,7 +140,7 @@ class SiteHourlyStat(BaseModel):
     gucount = IntegerField()
     dcount = IntegerField()
     gcount = IntegerField()
-    income = IntegerField()
+    income = BigIntegerField()
 
     class Meta:
         db_table = 'dw_fact_site_hourly'
@@ -152,13 +153,13 @@ class SiteDailyStat(BaseModel):
     gucount = IntegerField()
     dcount = IntegerField()
     gcount = IntegerField()
-    income = IntegerField()
+    income = BigIntegerField()
 
     class Meta:
         db_table = 'dw_fact_site_daily'
 
 
 if __name__ == '__main__':
-    db.create_tables([User, Room, Hour, Date,
-                      RoomHourlyTopUser, RoomDailyTopUser, SiteHourlyTopUser, SiteDailyTopUser,
+    db.create_tables([User, Hour, Date, Room, RoomCate, RoomCateMap,
+                      RoomDailyTopUser, SiteDailyTopUser,
                       RoomHourlyStat, RoomDailyStat, SiteHourlyStat, SiteDailyStat], safe=True)

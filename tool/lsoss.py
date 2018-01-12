@@ -33,8 +33,8 @@ def urls_group_by_date(repo, today):
 
             dates.add(date)
 
-    for date in sorted(dates):
-        with open(os.path.join(repo, 'dates.txt'), 'w', encoding='utf-8') as fout:
+    with open(os.path.join(repo, 'dates.txt'), 'w', encoding='utf-8') as fout:
+        for date in sorted(dates):
             fout.write('%s\n' % date)
 
 

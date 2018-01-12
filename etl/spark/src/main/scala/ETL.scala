@@ -80,9 +80,9 @@ object ETL {
       "IF(d.user IS NULL, g.user, d.user) AS user, " +
       "IF(d.room IS NULL, g.room, d.room) AS room, " +
       "IF(d.hour IS NULL, g.hour, d.hour) AS hour, " +
-      "IF(dcount IS NULL, 0, dcount) AS dcount, " +
-      "IF(gcount IS NULL, 0, gcount) AS gcount, " +
-      "IF(expense IS NULL, 0, expense) AS expense " +
+      "IF(dcount IS NULL, 0, dcount) AS dc, " +
+      "IF(gcount IS NULL, 0, gcount) AS gc, " +
+      "IF(expense IS NULL, 0, expense) AS exp " +
       "FROM danmu AS d " +
       "FULL JOIN gift AS g ON d.user = g.user AND d.room = g.room AND d.hour = g.hour")
 
@@ -94,69 +94,80 @@ object ETL {
 
     joinedDF.createOrReplaceTempView("combined")
 
-
     spark.sql("SELECT * FROM " +
-      "(SELECT room, hour, user, " +
-      "SUM(dcount) AS dcount, SUM(gcount) AS gcount, SUM(expense) AS expense, ROW_NUMBER() OVER (PARTITION BY room, hour ORDER BY SUM(expense) DESC) AS rn " +
-      "FROM combined GROUP BY room, hour, user) AS t " +
-      "WHERE rn <= 10")
+      "(SELECT room, user, " +
+      "SUM(dc) AS dcount, SUM(gc) AS gcount, SUM(exp) AS expense, ROW_NUMBER() OVER (PARTITION BY room ORDER BY SUM(exp) DESC) AS rn " +
+      "FROM combined GROUP BY room, user) AS t " +
+      "WHERE rn <= 20")
       .coalesce(1).write.format("csv").option("header", value = true)
-      .save(Paths.get(destRepo, date + "_room_top_user_hourly").toString)
+      .save(Paths.get(destRepo, date + "_room_top_user_daily_order_by_expense").toString)
 
     spark.sql("SELECT * FROM " +
       "(SELECT room, user, " +
-      "SUM(dcount) AS dcount, SUM(gcount) AS gcount, SUM(expense) AS expense, ROW_NUMBER() OVER (PARTITION BY room ORDER BY SUM(expense) DESC) AS rn " +
+      "SUM(dc) AS dcount, SUM(gc) AS gcount, SUM(exp) AS expense, ROW_NUMBER() OVER (PARTITION BY room ORDER BY SUM(gc) DESC) AS rn " +
       "FROM combined GROUP BY room, user) AS t " +
-      "WHERE rn <= 10")
+      "WHERE rn <= 20")
       .coalesce(1).write.format("csv").option("header", value = true)
-      .save(Paths.get(destRepo, date + "_room_top_user_daily").toString)
+      .save(Paths.get(destRepo, date + "_room_top_user_daily_order_by_gcount").toString)
 
     spark.sql("SELECT * FROM " +
-      "(SELECT hour, user, " +
-      "SUM(dcount) AS dcount, SUM(gcount) AS gcount, SUM(expense) AS expense, ROW_NUMBER() OVER (PARTITION BY hour ORDER BY SUM(expense) DESC) AS rn " +
-      "FROM combined GROUP BY hour, user) AS t " +
-      "WHERE rn <= 50")
+      "(SELECT room, user, " +
+      "SUM(dc) AS dcount, SUM(gc) AS gcount, SUM(exp) AS expense, ROW_NUMBER() OVER (PARTITION BY room ORDER BY SUM(dc) DESC) AS rn " +
+      "FROM combined GROUP BY room, user) AS t " +
+      "WHERE rn <= 20")
       .coalesce(1).write.format("csv").option("header", value = true)
-      .save(Paths.get(destRepo, date + "_site_top_user_hourly").toString)
+      .save(Paths.get(destRepo, date + "_room_top_user_daily_order_by_dcount").toString)
 
     spark.sql("SELECT user, " +
-      "SUM(dcount) AS dcount, SUM(gcount) AS gcount, SUM(expense) AS expense " +
-      "FROM combined GROUP BY user ORDER BY expense DESC LIMIT 50")
+      "SUM(dc) AS dcount, SUM(gc) AS gcount, SUM(exp) AS expense " +
+      "FROM combined GROUP BY user ORDER BY expense DESC LIMIT 20")
       .coalesce(1).write.format("csv").option("header", value = true)
-      .save(Paths.get(destRepo, date + "_site_top_user_daily").toString)
+      .save(Paths.get(destRepo, date + "_site_top_user_daily_order_by_expense").toString)
+
+    spark.sql("SELECT user, " +
+      "SUM(dc) AS dcount, SUM(gc) AS gcount, SUM(exp) AS expense " +
+      "FROM combined GROUP BY user ORDER BY gcount DESC LIMIT 20")
+      .coalesce(1).write.format("csv").option("header", value = true)
+      .save(Paths.get(destRepo, date + "_site_top_user_daily_order_by_gcount").toString)
+
+    spark.sql("SELECT user, " +
+      "SUM(dc) AS dcount, SUM(gc) AS gcount, SUM(exp) AS expense " +
+      "FROM combined GROUP BY user ORDER BY dcount DESC LIMIT 20")
+      .coalesce(1).write.format("csv").option("header", value = true)
+      .save(Paths.get(destRepo, date + "_site_top_user_daily_order_by_dcount").toString)
 
     spark.sql("SELECT room, hour, " +
       "COUNT(DISTINCT(user)) AS ucount, " +
-      "COUNT(DISTINCT(CASE WHEN dcount>0 THEN user END)) AS ducount, " +
-      "COUNT(DISTINCT(CASE WHEN gcount>0 THEN user END)) AS gucount, " +
-      "SUM(dcount) AS dcount, SUM(gcount) AS gcount, SUM(expense) AS income " +
+      "COUNT(DISTINCT(CASE WHEN dc>0 THEN user END)) AS ducount, " +
+      "COUNT(DISTINCT(CASE WHEN gc>0 THEN user END)) AS gucount, " +
+      "SUM(dc) AS dcount, SUM(gc) AS gcount, SUM(exp) AS income " +
       "FROM combined GROUP BY room, hour")
       .coalesce(1).write.format("csv").option("header", value = true)
       .save(Paths.get(destRepo, date + "_room_hourly").toString)
 
     spark.sql("SELECT room, " +
       "COUNT(DISTINCT(user)) AS ucount, " +
-      "COUNT(DISTINCT(CASE WHEN dcount>0 THEN user END)) AS ducount, " +
-      "COUNT(DISTINCT(CASE WHEN gcount>0 THEN user END)) AS gucount, " +
-      "SUM(dcount) AS dcount, SUM(gcount) AS gcount, SUM(expense) AS income " +
+      "COUNT(DISTINCT(CASE WHEN dc>0 THEN user END)) AS ducount, " +
+      "COUNT(DISTINCT(CASE WHEN gc>0 THEN user END)) AS gucount, " +
+      "SUM(dc) AS dcount, SUM(gc) AS gcount, SUM(exp) AS income " +
       "FROM combined GROUP BY room")
       .coalesce(1).write.format("csv").option("header", value = true)
       .save(Paths.get(destRepo, date + "_room_daily").toString)
 
     spark.sql("SELECT hour, " +
       "COUNT(DISTINCT(user)) AS ucount, " +
-      "COUNT(DISTINCT(CASE WHEN dcount>0 THEN user END)) AS ducount, " +
-      "COUNT(DISTINCT(CASE WHEN gcount>0 THEN user END)) AS gucount, " +
-      "SUM(dcount) AS dcount, SUM(gcount) AS gcount, SUM(expense) AS income " +
+      "COUNT(DISTINCT(CASE WHEN dc>0 THEN user END)) AS ducount, " +
+      "COUNT(DISTINCT(CASE WHEN gc>0 THEN user END)) AS gucount, " +
+      "SUM(dc) AS dcount, SUM(gc) AS gcount, SUM(exp) AS income " +
       "FROM combined GROUP BY hour")
       .coalesce(1).write.format("csv").option("header", value = true)
       .save(Paths.get(destRepo, date + "_site_hourly").toString)
 
     spark.sql("SELECT " +
       "COUNT(DISTINCT(user)) AS ucount, " +
-      "COUNT(DISTINCT(CASE WHEN dcount>0 THEN user END)) AS ducount, " +
-      "COUNT(DISTINCT(CASE WHEN gcount>0 THEN user END)) AS gucount, " +
-      "SUM(dcount) AS dcount, SUM(gcount) AS gcount, SUM(expense) AS income " +
+      "COUNT(DISTINCT(CASE WHEN dc>0 THEN user END)) AS ducount, " +
+      "COUNT(DISTINCT(CASE WHEN gc>0 THEN user END)) AS gucount, " +
+      "SUM(dc) AS dcount, SUM(gc) AS gcount, SUM(exp) AS income " +
       "FROM combined")
       .coalesce(1).write.format("csv").option("header", value = true)
       .save(Paths.get(destRepo, date + "_site_daily").toString)
