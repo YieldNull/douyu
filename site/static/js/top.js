@@ -2,11 +2,12 @@ initOnedayChart(2017-10-01);
 
 
 function initOnedayChart(dateOneday){
-   roomOnedayTop(dateOneday);
+   rankingOneday(dateOneday);
 }
 function initSomedayChart(date1,date2) {
-rankingLeftTwo(date1,date2);
+rankingSomeday(date1,date2);
 }
+
 function changeTab(type){
     var div1=document.getElementById("tab1");
     var div2=document.getElementById("tab2");
@@ -22,9 +23,45 @@ function changeTab(type){
          initSomedayChart(2017-10-01,2017-10-07);
          break
  }
-}
+};
+function changeDownTab(type){
+    var div1=document.getElementById("tab1D");
+    var div2=document.getElementById("tab2D");
+    var div3=document.getElementById("tab3D");
+ switch(type){
+     case 1:
+         div1.style.display="block";
+         div2.style.display="none";
+         div3.style.display='none';
+         break;
+     case 2:
+         div1.style.display="none";
+         div2.style.display="block";
+         div3.style.display='none';
+         break;
+      case 3:
+         div1.style.display="none";
+         div2.style.display="none";
+          div3.style.display='block';
+         break;
+ }
+};
+function changeManner(type){
+    var dateOne=$("#input1").val();
+    var date1=$("#input2").val();
+    var date2=$("#input3").val();
+     switch(type){
+     case 1:
+         initOnedayChart(dateOne);
+         break;
+     case 2:
+         initSomedayChart(date1,date2);
+         break
+};
 
-function rankingLeftOne(dateOne){
+
+//oneday请求数据
+function rankingOneday(dateOne){
     $.ajax({
         url:'',
         type:'GET',
@@ -33,12 +70,11 @@ function rankingLeftOne(dateOne){
         },
         contentType:'application/json',
         success:function (data) {
-             roomOnedayTop(data);
+             roomOnedayTopRoom(data);
         }
 
     });
-}
-function rankingLeftTwo(date1,date2){
+    //请求用户弹幕排行
     $.ajax({
         url: '',
         type:'GET',
@@ -48,12 +84,129 @@ function rankingLeftTwo(date1,date2){
         },
         contentType:'application/json',
         success:function(data){
-            roomSomedayTop(data);
+            onedayTopUserDanmu(data);
+        }
+    });
+
+    //请求用户礼物数排行
+     $.ajax({
+        url: '',
+        type:'GET',
+        data:{
+            "date1":date1,
+            "date2":date2
+        },
+        contentType:'application/json',
+        success:function(data){
+            onedayTopUserGift(data);
+        }
+    });
+
+    //请求用户花费排行
+     $.ajax({
+        url: '',
+        type:'GET',
+        data:{
+            "date1":date1,
+            "date2":date2
+        },
+        contentType:'application/json',
+        success:function(data){
+            onedayTopUserExpence(data);
+        }
+    });
+
+     //请求类别排名
+    $.ajax({
+        url: '',
+        type:'GET',
+        data:{
+            "date1":date1,
+            "date2":date2
+        },
+        contentType:'application/json',
+        success:function(data){
+            onedayTopCate(data);
         }
     });
 }
 
-function roomSomedayTop(data){
+//someday请求数据
+function rankingSomeday(date1,date2){
+    //请求弹幕、礼物、收入
+    $.ajax({
+        url: '',
+        type:'GET',
+        data:{
+            "date1":date1,
+            "date2":date2
+        },
+        contentType:'application/json',
+        success:function(data){
+            roomSomedayTopRoom(data);
+        }
+    });
+
+    //请求用户弹幕排行
+    $.ajax({
+        url: '',
+        type:'GET',
+        data:{
+            "date1":date1,
+            "date2":date2
+        },
+        contentType:'application/json',
+        success:function(data){
+            SomedayTopUserDanmu(data);
+        }
+    });
+
+    //请求用户礼物数排行
+     $.ajax({
+        url: '',
+        type:'GET',
+        data:{
+            "date1":date1,
+            "date2":date2
+        },
+        contentType:'application/json',
+        success:function(data){
+            SomedayTopUserGift(data);
+        }
+    });
+
+    //请求用户花费排行
+     $.ajax({
+        url: '',
+        type:'GET',
+        data:{
+            "date1":date1,
+            "date2":date2
+        },
+        contentType:'application/json',
+        success:function(data){
+            SomedayTopUserExpence(data);
+        }
+    });
+
+     //请求类别排名
+    $.ajax({
+        url: '',
+        type:'GET',
+        data:{
+            "date1":date1,
+            "date2":date2
+        },
+        contentType:'application/json',
+        success:function(data){
+            SomedayTopCate(data);
+        }
+    });
+
+}
+
+//一段时间图表
+function roomSomedayTopRoom(data){
     var myChart=echarts.init(document.getElementById('leftRankingTwo'));
     var option={
             title:{
@@ -103,7 +256,293 @@ function roomSomedayTop(data){
     };
       myChart.setOption(option);
 };
-function roomOnedayTop(data){
+function SomedayTopUserDanmu(data){
+    var myChart=echarts.init(document.getElementById('rightGraph3'));
+  var  option = {
+    title: {
+        text: '用户弹幕数排行榜',
+    },
+    tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+            type: 'shadow'
+        },
+        formatter: "{a} <br/>{b} : {c}%"
+    },
+    legend: {
+        data: ['弹幕数']
+    },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+    xAxis: {
+        type: 'value',
+        boundaryGap: [0, 0.01],
+        "axisLabel": {
+            "interval": 0,
+            formatter: '{value}%',
+        }
+    },
+    yAxis: {
+        type: 'category',
+        data:data.user
+    },
+    series: [{
+        name: '2',
+        type: 'bar',
+        data: data.danmu
+    }]
+
+};
+  myChart.setOption(option);
+};
+function SomedayTopUserGift(data){
+    var myChart=echarts.init(document.getElementById('rightGraph2'));
+var option = {
+    backgroundColor: '#0E2A43',
+    legend: {
+        bottom: 20,
+        textStyle:{
+            color:'#fff',
+        },
+        data: ['花费']
+    },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '10%',
+        containLabel: true
+    },
+
+            tooltip: {
+        show:"true",
+        trigger: 'axis',
+        axisPointer: { // 坐标轴指示器，坐标轴触发有效
+            type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+        }
+    },
+    xAxis:  {
+        type: 'value',
+        axisTick : {show: false},
+        axisLine: {
+            show: false,
+            lineStyle:{
+                color:'#fff',
+            }
+        },
+        splitLine: {
+            show: false
+        },
+    },
+    yAxis: [
+            {
+                type: 'category',
+                axisTick : {show: false},
+                axisLine: {
+                    show: true,
+                    lineStyle:{
+                        color:'#fff',
+                    }
+                },
+                data:data.user
+            },
+
+    ],
+    series: [
+        {
+            name: '花费',
+            type: 'bar',
+
+            itemStyle:{
+                normal: {
+                    show: true,
+                    color: '#green',
+                    barBorderRadius:50,
+                    borderWidth:0,
+                    borderColor:'#333',
+                }
+            },
+            barGap:'0%',
+            barCategoryGap:'50%',
+            data:data.gift2
+        }
+
+    ]
+};
+myChart.setOption(option);
+};
+function SomedayTopUserExpence(data){
+
+var myChart=echarts.init(document.getElementById('rightGraph1'));
+var option = {
+    backgroundColor: '#0E2A43',
+    legend: {
+        bottom: 20,
+        textStyle:{
+            color:'#fff',
+        },
+        data: ['花费']
+    },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '10%',
+        containLabel: true
+    },
+
+            tooltip: {
+        show:"true",
+        trigger: 'axis',
+        axisPointer: { // 坐标轴指示器，坐标轴触发有效
+            type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+        }
+    },
+    xAxis:  {
+        type: 'value',
+        axisTick : {show: false},
+        axisLine: {
+            show: false,
+            lineStyle:{
+                color:'#fff',
+            }
+        },
+        splitLine: {
+            show: false
+        },
+    },
+    yAxis: [
+            {
+                type: 'category',
+                axisTick : {show: false},
+                axisLine: {
+                    show: true,
+                    lineStyle:{
+                        color:'#fff',
+                    }
+                },
+                data:data.user
+            },
+
+    ],
+    series: [
+        {
+            name: '花费',
+            type: 'bar',
+
+            itemStyle:{
+                normal: {
+                    show: true,
+                    color: '#277ace',
+                    barBorderRadius:50,
+                    borderWidth:0,
+                    borderColor:'#333',
+                }
+            },
+            barGap:'0%',
+            barCategoryGap:'50%',
+            data:data.expence
+        }
+
+    ]
+};
+myChart.setOption(option);
+};
+function SomedayTopCate(data){
+  var myChart=echarts.init(document.getElementById('leftGraph'));
+  var  option = {
+    "title": {
+        "text": "最受欢迎类别排行榜",
+        "textStyle": {
+            "color": "#bcbfff",
+            "fontWeight": "bold",
+            "fontSize": 14
+        },
+        "top": "4%",
+        "left": "2.2%"
+    },
+    "tooltip": {
+        "trigger": "axis",
+        "axisPointer": { // 坐标轴指示器，坐标轴触发有效
+            "type": "shadow" // 默认为直线，可选为："line" | "shadow"
+        }
+    },
+    "grid": {
+        "left": "3%",
+        "right": "10%",
+        "bottom": "3%",
+        "containLabel": true
+    },
+    "yAxis": [{
+        "type": "category",
+        "data": ["TOP10", "TOP9", "TOP8", "TOP7", "TOP6","TOP5", "TOP4", "TOP3", "TOP2", "TOP1"],
+        "axisLine": {
+            "show": false
+        },
+        "axisTick": {
+            "show": false,
+            "alignWithLabel": true
+        },
+        "axisLabel": {
+            "textStyle": {
+                "color": "#ffb069"
+            }
+        }
+    }],
+    "xAxis": [{
+        "type": "value",
+        "axisLine": {
+            "show": false
+        },
+        "axisTick": {
+            "show": false
+        },
+        "axisLabel": {
+            "show": false
+        },
+        "splitLine": {
+            "show": false
+        }
+    }],
+
+    "series": [{
+        "name": "弹幕数",
+        "type": "bar",
+        "data": data,
+        "barCategoryGap": "35%",
+        "label": {
+            "normal": {
+                "show": true,
+                "position": "right",
+                "formatter": function(params) {
+                    return params.data.cate;
+                },
+                "textStyle": {
+                    "color": "#bcbfff" //color of value
+                }
+            }
+        },
+        "itemStyle": {
+            "normal": {
+                "color": new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                    "offset": 0,
+                    "color": "#ffb069" // 0% 处的颜色
+                }, {
+                    "offset": 1,
+                    "color": "#ec2e85" // 100% 处的颜色
+                }], false)
+            }
+        }
+    }]
+};
+  myChart.setOption(option);
+
+};
+
+//一天的时间图表
+function roomOnedayTopRoom(data){
     var myChart=echarts.init(document.getElementById('leftRankingOne'));
     var option = {
     backgroundColor: '#0E2A43',
@@ -322,7 +761,7 @@ function roomOnedayTop(data){
                     show: true,
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
                         offset: 0,
-                        color: '#3023AE'
+                        color: '#FFFF00'
                     }, {
                         offset: 1,
                         color: '#C96DD8'
@@ -348,4 +787,286 @@ function roomOnedayTop(data){
     ]
 };
     myChart.setOption(option);
+};
+function onedayTopUserDanmu(data){
+     var myChart=echarts.init(document.getElementById('rightGraph3'));
+  var  option = {
+    title: {
+        text: '用户弹幕数排行榜',
+    },
+    tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+            type: 'shadow'
+        },
+        formatter: "{a} <br/>{b} : {c}%"
+    },
+    legend: {
+        data: ['弹幕数']
+    },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+    xAxis: {
+        type: 'value',
+        boundaryGap: [0, 0.01],
+        "axisLabel": {
+            "interval": 0,
+            formatter: '{value}%',
+        }
+    },
+    yAxis: {
+        type: 'category',
+        data:data.user
+    },
+    series: [{
+        name: '2',
+        type: 'bar',
+        data: data.danmu
+    }]
+
+};
+  myChart.setOption(option);
+};
+function onedayTopUserGift(data){
+    var myChart=echarts.init(document.getElementById('rightGraph2'));
+var option = {
+    backgroundColor: '#0E2A43',
+    legend: {
+        bottom: 20,
+        textStyle:{
+            color:'#fff',
+        },
+        data: ['花费']
+    },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '10%',
+        containLabel: true
+    },
+
+            tooltip: {
+        show:"true",
+        trigger: 'axis',
+        axisPointer: { // 坐标轴指示器，坐标轴触发有效
+            type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+        }
+    },
+    xAxis:  {
+        type: 'value',
+        axisTick : {show: false},
+        axisLine: {
+            show: false,
+            lineStyle:{
+                color:'#fff',
+            }
+        },
+        splitLine: {
+            show: false
+        },
+    },
+    yAxis: [
+            {
+                type: 'category',
+                axisTick : {show: false},
+                axisLine: {
+                    show: true,
+                    lineStyle:{
+                        color:'#fff',
+                    }
+                },
+                data:data.user
+            },
+
+    ],
+    series: [
+        {
+            name: '花费',
+            type: 'bar',
+
+            itemStyle:{
+                normal: {
+                    show: true,
+                    color: '#green',
+                    barBorderRadius:50,
+                    borderWidth:0,
+                    borderColor:'#333',
+                }
+            },
+            barGap:'0%',
+            barCategoryGap:'50%',
+            data:data.gift2
+        }
+
+    ]
+};
+myChart.setOption(option);
+};
+function onedayTopUserExpence(data){
+    var myChart=echarts.init(document.getElementById('rightGraph1'));
+var option = {
+    backgroundColor: '#0E2A43',
+    legend: {
+        bottom: 20,
+        textStyle:{
+            color:'#fff',
+        },
+        data: ['花费']
+    },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '10%',
+        containLabel: true
+    },
+
+            tooltip: {
+        show:"true",
+        trigger: 'axis',
+        axisPointer: { // 坐标轴指示器，坐标轴触发有效
+            type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+        }
+    },
+    xAxis:  {
+        type: 'value',
+        axisTick : {show: false},
+        axisLine: {
+            show: false,
+            lineStyle:{
+                color:'#fff',
+            }
+        },
+        splitLine: {
+            show: false
+        },
+    },
+    yAxis: [
+            {
+                type: 'category',
+                axisTick : {show: false},
+                axisLine: {
+                    show: true,
+                    lineStyle:{
+                        color:'#fff',
+                    }
+                },
+                data:data.user
+            },
+
+    ],
+    series: [
+        {
+            name: '花费',
+            type: 'bar',
+
+            itemStyle:{
+                normal: {
+                    show: true,
+                    color: '#277ace',
+                    barBorderRadius:50,
+                    borderWidth:0,
+                    borderColor:'#333',
+                }
+            },
+            barGap:'0%',
+            barCategoryGap:'50%',
+            data:data.expence
+        }
+
+    ]
+};
+myChart.setOption(option);
+};
+function onedayTopCate(data){
+      var myChart=echarts.init(document.getElementById('leftGraph'));
+  var  option = {
+    "title": {
+        "text": "最受欢迎类别排行榜",
+        "textStyle": {
+            "color": "#bcbfff",
+            "fontWeight": "bold",
+            "fontSize": 14
+        },
+        "top": "4%",
+        "left": "2.2%"
+    },
+    "tooltip": {
+        "trigger": "axis",
+        "axisPointer": { // 坐标轴指示器，坐标轴触发有效
+            "type": "shadow" // 默认为直线，可选为："line" | "shadow"
+        }
+    },
+    "grid": {
+        "left": "3%",
+        "right": "10%",
+        "bottom": "3%",
+        "containLabel": true
+    },
+    "yAxis": [{
+        "type": "category",
+        "data": ["TOP10", "TOP9", "TOP8", "TOP7", "TOP6","TOP5", "TOP4", "TOP3", "TOP2", "TOP1"],
+        "axisLine": {
+            "show": false
+        },
+        "axisTick": {
+            "show": false,
+            "alignWithLabel": true
+        },
+        "axisLabel": {
+            "textStyle": {
+                "color": "#ffb069"
+            }
+        }
+    }],
+    "xAxis": [{
+        "type": "value",
+        "axisLine": {
+            "show": false
+        },
+        "axisTick": {
+            "show": false
+        },
+        "axisLabel": {
+            "show": false
+        },
+        "splitLine": {
+            "show": false
+        }
+    }],
+
+    "series": [{
+        "name": "弹幕数",
+        "type": "bar",
+        "data": data,
+        "barCategoryGap": "35%",
+        "label": {
+            "normal": {
+                "show": true,
+                "position": "right",
+                "formatter": function(params) {
+                    return params.data.cate;
+                },
+                "textStyle": {
+                    "color": "#bcbfff" //color of value
+                }
+            }
+        },
+        "itemStyle": {
+            "normal": {
+                "color": new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                    "offset": 0,
+                    "color": "#ffb069" // 0% 处的颜色
+                }, {
+                    "offset": 1,
+                    "color": "#ec2e85" // 100% 处的颜色
+                }], false)
+            }
+        }
+    }]
+};
+  myChart.setOption(option);
 };
