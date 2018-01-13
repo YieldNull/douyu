@@ -1,0 +1,150 @@
+    {% extends 'base.html' %}
+
+    {% block content %}
+    <div class="bigDivv"style="height:910px;">
+       <div class="row" style="width:100%;">
+         <div class="col-md-2" id="left"style="height:100%" >
+         <div class="ui left demo vertical inverted labeled icon menu"style="height:910px;width:90%;">
+             <a class="item">
+                 <i class="home icon"></i>
+                 Home
+             </a>
+             <a class="item">
+                 <i class="block layout icon"></i>
+                 Topics
+             </a>
+             <a class="item">
+             <i class="smile icon"></i>
+                 朋友
+             </a>
+         </div>
+         </div>
+           <div class="col-md-10" id="right"style="height:910px">
+               <div class="row" style="width:100%;height:100%">
+                   <div class="row total" style="height:125px;margin-bottom:20px;width:100%;">
+                       <div class="row" style="margin-top:10px">
+                           <div class="col-md-2">
+                               <label style="margin-left:40px;margin-top:10px;">Paking Time:</label>
+                           </div>
+                       <div class="from-group col-md-7">
+
+                                              <div class="input-group date form_date" data-date=""  data-date-format="yyyy-mm-dd" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd" style="height:20px;">
+                                              <input class="form-control" value="2017-10-01" size="12" type="text" value="" readonly>
+                                              <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
+                                              <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                                              </div>
+                                              <input type="hidden" id="dtp_input2" value="" /><br/>
+                       </div>
+                       <div class="from-group col-md-3"></div>
+                       </div>
+                       <div class="row">
+                           <div class="col-md-2">
+                               <label style="margin-left:40px;margin-top:10px;">Paking Time:</label>
+                           </div>
+                           <div class="from-group col-md-4">
+                                                   <div class="input-group date form_date" data-date=""  data-date-format="yyyy-mm-dd" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
+                                                        <input class="form-control" value="2017-10-01" size="12" type="text" value="" readonly>
+                                                        <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
+                                                        <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                                                   </div>
+                                                   <input type="hidden" id="dtp_input2" value="" /><br/>
+                           </div>
+                           <div class="from-group col-md-4">
+                                                  <div class="input-group date form_date" data-date=""  data-date-format="yyyy-mm-dd" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
+                                                        <input class="form-control" value="2017-10-01" size="12" type="text" value="" readonly>
+                                                        <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
+                                                        <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                                                  </div>
+                                                  <input type="hidden" id="dtp_input2" value="" /><br/>
+                           </div>
+                           <div class="col-md-2"></div>
+                       </div>
+                   </div>
+                   <div class="row" style="height:300px;width:100%;margin-bottom:20px">
+                       <div class="col-md-8" style="height:300px;">
+                           <div id="graph1" class="total"style="width:100%;height:300px;">
+
+                           </div>
+
+                       </div>
+                       <div class="col-md-4 "style="height:300px;">
+                           <div id="graph2"class="total" style="width:100%;height:300px">
+
+                           </div>
+                       </div>
+                   </div>
+                   <div class="row" style="height:125px;width:100%;margin-bottom:20px">
+                       <div class="col-md-4"style="height:125px;">
+                           <div class="total" style="width:100%;height:125px;">
+                               <div class="detail tile-red hvr-grow">
+                                   <div class="content">
+                                       <span class="glyphicon glyphicon-user"></span>
+                                       <p>User</p>
+                                       <h1 id="userCount"></h1>
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
+                       <div class="col-md-4"style="height:125px;">
+                              <div class="total" style="width:100%;height:125px;">
+                               <div class="detail tile-red hvr-grow">
+                                   <div class="content">
+                                       <span class="glyphicon glyphicon-bell"></span>
+                                       <p>Gift</p>
+                                       <h1 id="giftCount"></h1>
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
+                       <div class="col-md-4"style="height:125px;">
+                             <div class="total" style="width:100%;height:125px;">
+                               <div class="detail tile-red hvr-grow">
+                                   <div class="content">
+                                       <span class="glyphicon glyphicon-user"></span>
+                                       <p>Danmu</p>
+                                       <h1 id="giftCount"></h1>
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
+                   </div>
+                   <div class="row" style="height:300px;width:100%;" >
+                       <div class="col-md-6"style="height: 300px">
+                            <div id="graph3" class="total"style="width:100%;height:300px;">
+
+                           </div>
+                       </div>
+                       <div class="col-md-6"style="height: 300px">
+                            <div id="graph4" class="total"style="width:100%;height:300px;">
+
+                           </div>
+                       </div>
+                   </div>
+               </div>
+           </div>
+       </div>
+    </div>
+    {% endblock %}
+
+    {% block css %}
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/style.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/pager.css') }}">
+    {% endblock %}
+
+    {% block script %}
+        <script type="text/javascript">
+          $('.ui.labeled.icon.sidebar').sidebar('toggle');
+          $('.form_date').datetimepicker({
+           language:'zh-CN',
+            weekStart: 1,
+            todayBtn:  1,
+            autoclose: 1,
+            todayHighlight: 1,
+            startView: 2,
+            minView: 2,
+            forceParse: 0,
+           startDate:2017-10-01
+        });
+        </script>
+
+    {% endblock %}

@@ -45,6 +45,13 @@ def cate_detail(cid):
 
     return render_template('cate.html', cid=cid)
 
+@app.route('/ranking')
+def ranking():
+    return render_template('top.html')
+
+@app.route('/totalStatistics')
+def totalStatistics():
+    return render_template('statistics.html')
 
 @app.route('/api/live/<int:page>')
 def api_live(page):
