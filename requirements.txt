@@ -9,3 +9,4 @@ pymongo
 scrapy
 scrapy-random-useragent
 pandas
+simplejson

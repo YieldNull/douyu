@@ -3,10 +3,13 @@ import pymongo
 import hashlib
 import time
 import requests
+from datetime import datetime
+from flask import Flask, render_template, jsonify, abort, url_for, request
+from peewee import fn, SQL
 
-from flask import Flask, render_template, jsonify, abort, url_for
 from settings import MONGO_DATABASE, MONGO_URI, PAGINATE_BY
 from common.ws import RedisClient
+from etl.warehouse.models import *
 
 app = Flask(__name__)
 
@@ -42,13 +45,16 @@ def cate_detail(cid):
 
     return render_template('cate.html', cid=cid)
 
+
 @app.route('/ranking')
 def ranking():
     return render_template('top.html')
 
+
 @app.route('/totalStatistics')
 def totalStatistics():
     return render_template('statistics.html')
+
 
 @app.route('/api/live/<int:page>')
 def api_live(page):
@@ -152,6 +158,241 @@ def api_danmu_keep_alive(rid):
 
     redis_client.publish_temporary_rid(rid)
     return jsonify({'code': 0, 'msg': 'success'})
+
+
+@app.route('/api/stat/site/top/room/<string:date>')
+def api_stat_site_top_room_at_date(date):
+    try:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+        limit = int(request.args.get('limit', 20))
+        limit = limit if limit > 0 else 20
+    except ValueError:
+        return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    query = RoomDailyStat.select(
+        RoomDailyStat.room,
+        RoomDailyStat.dcount, RoomDailyStat.gcount, RoomDailyStat.income,
+        (RoomDailyStat.dcount * 100 + RoomDailyStat.income).alias('f')
+    ).join(Date, on=(RoomDailyStat.date == Date.date_key)) \
+        .where(Date.date == date) \
+        .order_by(SQL('f').desc()) \
+        .limit(limit)
+
+    payload = []
+    order = 0
+    for row in query:
+        payload.append({
+            'roomId': row.room.room_id,
+            'roomName': row.room.name,
+            'dcount': row.dcount,
+            'gcount': row.gcount,
+            'income': int(row.income / 100),
+            'factor': int(row.f / 100),
+            'order': order
+        })
+        order += 1
+    return jsonify({'code': 0, 'msg': 'success', 'data': payload})
+
+
+@app.route('/api/stat/site/top/room/<string:start>/<string:end>')
+def api_stat_site_top_room_in_date_range(start, end):
+    try:
+        start = datetime.strptime(start, '%Y-%m-%d').date()
+        end = datetime.strptime(end, '%Y-%m-%d').date()
+        limit = int(request.args.get('limit', 20))
+        limit = limit if limit > 0 else 20
+    except ValueError:
+        return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    query = RoomDailyStat.select(
+        RoomDailyStat.room,
+        RoomDailyStat.dcount, RoomDailyStat.gcount, RoomDailyStat.income,
+        fn.SUM((RoomDailyStat.dcount * 100 + RoomDailyStat.income)).alias('f')
+    ).join(Date, on=(RoomDailyStat.date == Date.date_key)) \
+        .where((Date.date >= start) & (Date.date <= end)) \
+        .group_by(RoomDailyStat.room) \
+        .order_by(SQL('f').desc()) \
+        .limit(limit)
+
+    payload = []
+    order = 0
+    for row in query:
+        payload.append({
+            'roomId': row.room.room_id,
+            'roomName': row.room.name,
+            'dcount': row.dcount,
+            'gcount': row.gcount,
+            'income': int(row.income / 100),
+            'factor': int(row.f / 100),
+            'order': order
+        })
+        order += 1
+    return jsonify({'code': 0, 'msg': 'success', 'data': payload})
+
+
+@app.route('/api/stat/site/top/cate/<string:date>')
+def api_stat_site_top_cate_at_date(date):
+    try:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+        limit = int(request.args.get('limit', 20))
+        limit = limit if limit > 0 else 20
+    except ValueError:
+        return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    query = RoomDailyStat.select(
+        RoomDailyStat.cate,
+        fn.SUM(RoomDailyStat.dcount).alias('dsum'),
+        fn.SUM(RoomDailyStat.gcount).alias('gsum'),
+        fn.SUM(RoomDailyStat.income).alias('isum'),
+        (fn.SUM(RoomDailyStat.dcount * 100) + fn.SUM(RoomDailyStat.income)).alias('f')
+    ).join(Date, on=(RoomDailyStat.date == Date.date_key)) \
+        .join(RoomCate, on=(RoomDailyStat.cate == RoomCate.cate_key)) \
+        .where(Date.date == date) \
+        .group_by(RoomDailyStat.cate) \
+        .order_by(SQL('f').desc()) \
+        .limit(limit)
+
+    payload = []
+    order = 0
+    for row in query:
+        payload.append({
+            'cateId': row.cate.cate_id,
+            'cateName': row.cate.name,
+            'dcount': row.dsum,
+            'gcount': row.gsum,
+            'income': int(row.isum / 100),
+            'factor': int(row.f / 100),
+            'order': order
+        })
+        order += 1
+    return jsonify({'code': 0, 'msg': 'success', 'data': payload})
+
+
+@app.route('/api/stat/site/top/cate/<string:start>/<string:end>')
+def api_stat_site_top_cate_in_date_range(start, end):
+    try:
+        start = datetime.strptime(start, '%Y-%m-%d').date()
+        end = datetime.strptime(end, '%Y-%m-%d').date()
+        limit = int(request.args.get('limit', 20))
+        limit = limit if limit > 0 else 20
+    except ValueError:
+        return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    query = RoomDailyStat.select(
+        RoomDailyStat.cate,
+        fn.SUM(RoomDailyStat.dcount).alias('dsum'),
+        fn.SUM(RoomDailyStat.gcount).alias('gsum'),
+        fn.SUM(RoomDailyStat.income).alias('isum'),
+        (fn.SUM(RoomDailyStat.dcount * 100) + fn.SUM(RoomDailyStat.income)).alias('f')
+    ).join(Date, on=(RoomDailyStat.date == Date.date_key)) \
+        .join(RoomCate, on=(RoomDailyStat.cate == RoomCate.cate_key)) \
+        .where((Date.date >= start) & (Date.date <= end)) \
+        .group_by(RoomDailyStat.cate) \
+        .order_by(SQL('f').desc()) \
+        .limit(limit)
+
+    payload = []
+    order = 0
+    for row in query:
+        payload.append({
+            'cateId': row.cate.cate_id,
+            'cateName': row.cate.name,
+            'dcount': row.dsum,
+            'gcount': row.gsum,
+            'income': int(row.isum / 100),
+            'factor': int(row.f / 100),
+            'order': order
+        })
+        order += 1
+    return jsonify({'code': 0, 'msg': 'success', 'data': payload})
+
+
+@app.route('/api/stat/site/top/user/<string:date>/<ttype>')
+def api_stat_site_top_user_at_date(date, ttype):
+    tmap = {
+        'danmu': TOP_TYPE_DCOUNT,
+        'gift': TOP_TYPE_GCOUNT,
+        'expense': TOP_TYPE_EXPENSE
+    }
+
+    order_by = {
+        TOP_TYPE_DCOUNT: SiteDailyTopUser.dcount.desc(),
+        TOP_TYPE_GCOUNT: SiteDailyTopUser.gcount.desc(),
+        TOP_TYPE_EXPENSE: SiteDailyTopUser.expense.desc(),
+    }
+
+    try:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+        limit = int(request.args.get('limit', 20))
+        limit = limit if limit > 0 else 20
+        ttype = tmap[ttype]
+    except ValueError or KeyError:
+        return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    query = SiteDailyTopUser.select() \
+        .join(Date, on=(SiteDailyTopUser.date == Date.date_key)) \
+        .where((Date.date == date) & (SiteDailyTopUser.ttype == ttype)) \
+        .order_by(order_by[ttype]) \
+        .limit(limit)
+
+    payload = []
+    order = 0
+    for row in query:
+        payload.append({
+            'user': row.user.name,
+            'dcount': row.dcount,
+            'gcount': row.gcount,
+            'expense': row.expense,
+        })
+        order += 1
+    return jsonify({'code': 0, 'msg': 'success', 'data': payload})
+
+
+@app.route('/api/stat/site/top/user/<string:start>/<string:end>/<ttype>')
+def api_stat_site_top_user_in_date_range(start, end, ttype):
+    tmap = {
+        'danmu': TOP_TYPE_DCOUNT,
+        'gift': TOP_TYPE_GCOUNT,
+        'expense': TOP_TYPE_EXPENSE
+    }
+
+    order_by = {
+        TOP_TYPE_DCOUNT: SQL('davg').desc(),
+        TOP_TYPE_GCOUNT: SQL('gavg').desc(),
+        TOP_TYPE_EXPENSE: SQL('eavg').desc(),
+    }
+
+    try:
+        start = datetime.strptime(start, '%Y-%m-%d').date()
+        end = datetime.strptime(end, '%Y-%m-%d').date()
+        limit = int(request.args.get('limit', 20))
+        limit = limit if limit > 0 else 20
+        ttype = tmap[ttype]
+    except ValueError or KeyError:
+        return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    query = SiteDailyTopUser.select(
+        SiteDailyTopUser.user,
+        fn.AVG(SiteDailyTopUser.dcount).alias('davg'),
+        fn.AVG(SiteDailyTopUser.gcount).alias('gavg'),
+        fn.AVG(SiteDailyTopUser.expense).alias('eavg')
+    ).join(Date, on=(SiteDailyTopUser.date == Date.date_key)) \
+        .where((Date.date >= start) & (Date.date <= end) & (SiteDailyTopUser.ttype == ttype)) \
+        .group_by(SiteDailyTopUser.user) \
+        .order_by(order_by[ttype]) \
+        .limit(limit)
+
+    payload = []
+    order = 0
+    for row in query:
+        payload.append({
+            'user': row.user.name,
+            'dcount': row.davg,
+            'gcount': row.gavg,
+            'expense': row.eavg,
+        })
+        order += 1
+    return jsonify({'code': 0, 'msg': 'success', 'data': payload})
 
 
 if __name__ == '__main__':
