@@ -1,8 +1,12 @@
-initOnedayChart(2017-10-01);
+initOnedayChart();
 
 
-function initOnedayChart(dateOneday){
-   rankingOneday(dateOneday);
+function initOnedayChart(){
+  // rankingOneday(dateOneday);
+    onedayTopUserDanmu();
+    onedayTopUserGift();
+    onedayTopUserExpence();
+
 }
 function initSomedayChart(date1,date2) {
 rankingSomeday(date1,date2);
@@ -28,16 +32,26 @@ function changeDownTab(type){
     var div1=document.getElementById("tab1D");
     var div2=document.getElementById("tab2D");
     var div3=document.getElementById("tab3D");
+    var l1=document.getElementById("l1");
+    var l2=document.getElementById("l2");
+    var l3=document.getElementById("l3");
+    document.getElementById('xx').className=''
  switch(type){
      case 1:
-         div1.style.display="block";
-         div2.style.display="none";
-         div3.style.display='none';
+         div1.className="tab-pane active";
+         div2.className="tab-pane";
+         div3.className="tab-pane";
+         l1.className="active";
+         l2.className="";
+         l3.className="";
          break;
      case 2:
-         div1.style.display="none";
-         div2.style.display="block";
-         div3.style.display='none';
+         div2.className="tab-pane active";
+         div2.className="tab-pane";
+         div3.className="tab-pane";
+         l1.className="active";
+         l2.className="";
+         l3.className="";
          break;
       case 3:
          div1.style.display="none";
@@ -57,7 +71,7 @@ function changeManner(type){
      case 2:
          initSomedayChart(date1,date2);
          break
-};
+};}
 
 
 //oneday请求数据
@@ -788,7 +802,7 @@ function roomOnedayTopRoom(data){
 };
     myChart.setOption(option);
 };
-function onedayTopUserDanmu(data){
+function onedayTopUserDanmu(){
      var myChart=echarts.init(document.getElementById('rightGraph3'));
   var  option = {
     title: {
@@ -820,18 +834,18 @@ function onedayTopUserDanmu(data){
     },
     yAxis: {
         type: 'category',
-        data:data.user
+        data:['xio','kdf','fkdj']
     },
     series: [{
         name: '2',
         type: 'bar',
-        data: data.danmu
+        data: [100,300,200]
     }]
 
 };
   myChart.setOption(option);
 };
-function onedayTopUserGift(data){
+function onedayTopUserGift(){
     var myChart=echarts.init(document.getElementById('rightGraph2'));
 var option = {
     backgroundColor: '#0E2A43',
@@ -879,7 +893,7 @@ var option = {
                         color:'#fff',
                     }
                 },
-                data:data.user
+                data:['xio','kdf','fkdj']
             },
 
     ],
@@ -899,14 +913,14 @@ var option = {
             },
             barGap:'0%',
             barCategoryGap:'50%',
-            data:data.gift2
+            data:[100,200,300]
         }
 
     ]
 };
 myChart.setOption(option);
 };
-function onedayTopUserExpence(data){
+function onedayTopUserExpence(){
     var myChart=echarts.init(document.getElementById('rightGraph1'));
 var option = {
     backgroundColor: '#0E2A43',
@@ -954,7 +968,7 @@ var option = {
                         color:'#fff',
                     }
                 },
-                data:data.user
+                data:['xio','kdf','fkdj']
             },
 
     ],
@@ -974,7 +988,7 @@ var option = {
             },
             barGap:'0%',
             barCategoryGap:'50%',
-            data:data.expence
+            data:[100,20,344]
         }
 
     ]
