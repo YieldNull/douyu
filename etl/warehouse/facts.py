@@ -17,15 +17,21 @@ class RDS(object):
         self.logger = get_logger("ETL-FACT")
 
     def store(self):
-        self.executor.submit(self._store_top_user, is_site=False)
-        self.executor.submit(self._store_top_user, is_site=True)
+        futures = []
+        futures.append(self.executor.submit(self._store_top_user, is_site=False))
+        futures.append(self.executor.submit(self._store_top_user, is_site=True))
 
-        self.executor.submit(self._store_stat, is_site=False, is_daily=False)
-        self.executor.submit(self._store_stat, is_site=False, is_daily=True)
-        self.executor.submit(self._store_stat, is_site=True, is_daily=False)
-        self.executor.submit(self._store_stat, is_site=True, is_daily=True)
+        futures.append(self.executor.submit(self._store_stat, is_site=False, is_daily=False))
+        futures.append(self.executor.submit(self._store_stat, is_site=False, is_daily=True))
+        futures.append(self.executor.submit(self._store_stat, is_site=True, is_daily=False))
+        futures.append(self.executor.submit(self._store_stat, is_site=True, is_daily=True))
 
         self.executor.shutdown(wait=True)
+
+        for fu in futures:
+            exp = fu.exception()
+            if exp is not None:
+                self.logger.warning(repr(exp))
 
     def _store_top_user(self, is_site):
         date_str = self.date.strftime("%Y_%m_%d")
@@ -54,13 +60,13 @@ class RDS(object):
                     expense = row['expense']
 
                     if is_site:
-                        SiteDailyTopUser.create(user_key=user_key, date_key=date_key,
+                        SiteDailyTopUser.create(user=user_key, date=date_key,
                                                 dcount=dcount, gcount=gcount, expense=expense, ttype=ttype)
                     else:
                         room, _ = Room.get_or_create(room_key=row['room'], room_id=row['room'])
                         room_key = room.room_key
 
-                        RoomDailyTopUser.create(room_key=room_key, user_key=user_key,
+                        RoomDailyTopUser.create(room=room_key, user=user_key,
                                                 date_key=date_key,
                                                 dcount=dcount, gcount=gcount, expense=expense, ttype=ttype)
                 except Exception:
@@ -89,12 +95,12 @@ class RDS(object):
 
                 if is_site:
                     if is_daily:
-                        SiteDailyStat.create(date_key=date_key,
+                        SiteDailyStat.create(date=date_key,
                                              ucount=ucount, ducount=ducount, gucount=gucount,
                                              dcount=dcount, gcount=gcount, income=income)
                     else:
                         hour_key = row['hour'] + 1
-                        SiteHourlyStat.create(date_key=date_key, hour_key=hour_key,
+                        SiteHourlyStat.create(date=date_key, hour=hour_key,
                                               ucount=ucount, ducount=ducount, gucount=gucount,
                                               dcount=dcount, gcount=gcount, income=income)
 
@@ -111,14 +117,14 @@ class RDS(object):
                     cate_key = cate_map.cate_key
 
                     if is_daily:
-                        RoomDailyStat.create(room_key=room_key, date_key=date_key, cate_key=cate_key,
+                        RoomDailyStat.create(room=room_key, date=date_key, cate=cate_key,
                                              ucount=ucount, ducount=ducount, gucount=gucount,
                                              dcount=dcount, gcount=gcount, income=income)
                     else:
                         hour_key = row['hour'] + 1
 
-                        RoomHourlyStat.create(room_key=room_key, cate_key=cate_key,
-                                              date_key=date_key, hour_key=hour_key,
+                        RoomHourlyStat.create(room=room_key, cate=cate_key,
+                                              date=date_key, hour=hour_key,
                                               ucount=ucount, ducount=ducount, gucount=gucount,
                                               dcount=dcount, gcount=gcount, income=income)
             except Exception:

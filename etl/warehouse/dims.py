@@ -15,7 +15,7 @@ def gen_date(insert=False):
     key = 1
     while dt <= end:
         if insert:
-            Date.create(year=dt.year, month=dt.month, day=dt.day, weekday=dt.isoweekday())
+            Date.create(date=dt, year=dt.year, month=dt.month, day=dt.day, weekday=dt.isoweekday())
 
         dates[dt.strftime("%Y_%m_%d")] = key
 
@@ -104,6 +104,6 @@ def store_gift(path):
 
 if __name__ == '__main__':
     # store_user()
-    # gen_date(insert=True)
-    # gen_hour()
-    store_gift('gift_price.csv')
+    gen_date(insert=True)
+    gen_hour()
+    # store_gift('gift_price.csv')
