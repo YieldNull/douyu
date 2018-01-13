@@ -1,9 +1,4 @@
 import re
-import logging
-import queue
-import threading
-import time
-import os
 
 
 class RegexParser(object):
@@ -196,26 +191,30 @@ class RegexParser(object):
             return self.getOther(msg)
 
 
-class ParserStorage(object):
-    def __init__(self, repo):
-        self.jobs = queue.Queue()
+class MsgCsvStorage(object):
+    def __init__(self, file_prefix):
 
-        self.repo = repo
-        self.date = time.strftime('%Y_%m_%d')
+        self.file_prefix = file_prefix
 
-        self._open_fds()
-
-        self.thread = threading.Thread(target=self._handler_thread)
-        self.thread.start()
+        self.fp_text = open(self.file_prefix + '_text.txt', 'a', encoding='utf-8', buffering=1024 * 64)
+        self.fp_gift = open(self.file_prefix + '_gift.txt', 'a', encoding='utf-8', buffering=1024 * 64)
+        self.fp_sgift = open(self.file_prefix + '_sgift.txt', 'a', encoding='utf-8', buffering=1024 * 64)
+        self.fp_u2u = open(self.file_prefix + '_u2u.txt', 'a', encoding='utf-8', buffering=1024 * 64)
+        self.fp_uenter = open(self.file_prefix + '_uenter.txt', 'a', encoding='utf-8', buffering=1024 * 64)
 
     def store(self, msg):
-        if not self.thread.is_alive():
-            self.thread = threading.Thread(target=self._handler_thread)
-            self.thread.start()
-            # self.logger.warn("Working thread was dead. Restarting")
+        mtype = msg['type']
 
-        job = self._store_msg(msg)
-        self.jobs.put(job)
+        if mtype == 'chatmsg':
+            self.fp_text.write('%s\n' % self._store_text(msg))
+        elif mtype == 'dgb':
+            self.fp_gift.write('%s\n' % self._store_gift(msg))
+        elif mtype == 'spbc':
+            self.fp_sgift.write('%s\n' % self._store_super_gift(msg))
+        elif mtype == 'gpbc':
+            self.fp_u2u.write('%s\n' % self._store_u2u(msg))
+        elif mtype == 'uenter':
+            self.fp_uenter.write('%s\n' % self._store_uenter(msg))
 
     def close(self):
         self._safe_close(self.fp_text)
@@ -231,53 +230,9 @@ class ParserStorage(object):
             except:
                 pass
 
-    def _open_fds(self):
-        prefix = os.path.join(self.repo, self.date)
-
-        self.fp_text = open(prefix + '_text.txt', 'a', encoding='utf-8', buffering=1024 * 64)
-        self.fp_gift = open(prefix + '_gift.txt', 'a', encoding='utf-8', buffering=1024 * 64)
-        self.fp_sgift = open(prefix + '_sgift.txt', 'a', encoding='utf-8', buffering=1024 * 64)
-        self.fp_u2u = open(prefix + '_u2u.txt', 'a', encoding='utf-8', buffering=1024 * 64)
-        self.fp_uenter = open(prefix + '_uenter.txt', 'a', encoding='utf-8', buffering=1024 * 64)
-
-    def _handler_thread(self):
-        while True:
-            date = time.strftime('%Y_%m_%d')
-            if date != self.date:
-                self.date = date
-                self.close()
-                self._open_fds()
-
-            mtype, line = self.jobs.get(block=True)
-            if mtype == 'chatmsg':
-                self.fp_text.write('%s\n' % line)
-            elif mtype == 'dgb':
-                self.fp_gift.write('%s\n' % line)
-            elif mtype == 'spbc':
-                self.fp_sgift.write('%s\n' % line)
-            elif mtype == 'gpbc':
-                self.fp_u2u.write('%s\n' % line)
-            elif mtype == 'uenter':
-                self.fp_uenter.write('%s\n' % line)
-
-    def _store_msg(self, msg):
-        mtype = msg['type']
-
-        if mtype == 'chatmsg':
-            return mtype, self._store_text(msg)
-        elif mtype == 'dgb':
-            return mtype, self._store_gift(msg)
-        elif mtype == 'spbc':
-            return mtype, self._store_super_gift(msg)
-        elif mtype == 'gpbc':
-            return mtype, self._store_u2u(msg)
-        elif mtype == 'uenter':
-            return mtype, self._store_uenter(msg)
-        return 'other', None
-
     def _store_text(self, msg):
         return '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (
-            str(int(msg['time'])), msg['roomID'],
+            str(int(float(msg['time']))), msg['roomID'],
             msg['username'].replace('\t', ''), msg['userlevel'],
             msg['badgename'].replace('\t', ''), msg['badgelv'],
             msg['broomID'], msg['content'].replace('\n', '').replace('\r', '')
@@ -285,7 +240,7 @@ class ParserStorage(object):
 
     def _store_gift(self, msg):
         return '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (
-            str(int(msg['time'])), msg['roomID'],
+            str(int(float(msg['time']))), msg['roomID'],
             msg['username'].replace('\t', ''), msg['userlevel'],
             msg['badgename'].replace('\t', ''), msg['badgelv'],
             msg['broomID'], msg['giftID'].replace('\t', '')
@@ -293,23 +248,100 @@ class ParserStorage(object):
 
     def _store_super_gift(self, msg):
         return '%s\t%s\t%s\t%s\t%s\t%s' % (
-            str(int(msg['time'])), msg['roomID'],
+            str(int(float(msg['time']))), msg['roomID'],
             msg['droomID'], msg['username'].replace('\t', ''),
             msg['giftname'].replace('\t', ''), msg['aname'].replace('\t', '')
         )
 
     def _store_u2u(self, msg):
         return '%s\t%s\t%s\t%s\t%s' % (
-            str(int(msg['time'])), msg['roomID'],
+            str(int(float(msg['time']))), msg['roomID'],
             msg['username'].replace('\t', ''), msg['rusername'].replace('\t', ''),
             msg['pnm'].replace('\t', '')
         )
 
     def _store_uenter(self, msg):
         return '%s\t%s\t%s\t%s' % (
-            str(int(msg['time'])), msg['roomID'],
+            str(int(float(msg['time']))), msg['roomID'],
             msg['username'].replace('\t', ''), msg['userlevel']
         )
+
+
+class MsgParser(object):
+    def __init__(self, mtype):
+        self._parser = None
+        if mtype == 'gift':
+            self._parser = self._parse_gift
+        elif mtype == 'text':
+            self._parser = self._parse_text
+        elif mtype == 'sgift':
+            self._parser = self._parse_sgift
+        elif mtype == 'u2u':
+            self._parser = self._parse_u2u
+        elif mtype == 'uenter':
+            self._parser = self._parse_uenter
+
+    def parse(self, line):
+        fields = line.split('\t')
+        fields[-1] = fields[-1][:-1]
+
+        return self._parser(fields)
+
+    def _parse_text(self, fields):
+        return {
+            'type': 'chatmsg',
+            'time': fields[0],
+            'roomID': fields[1],
+            'username': fields[2],
+            'userlevel': fields[3],
+            'badgename': fields[4],
+            'badgelv': fields[5],
+            'broomID': fields[6],
+            'content': fields[7]
+        }
+
+    def _parse_gift(self, fields):
+        return {
+            'type': 'dgb',
+            'time': fields[0],
+            'roomID': fields[1],
+            'username': fields[2],
+            'userlevel': fields[3],
+            'badgename': fields[4],
+            'badgelv': fields[5],
+            'broomID': fields[6],
+            'giftID': fields[7]
+        }
+
+    def _parse_sgift(self, fields):
+        return {
+            'type': 'spbc',
+            'time': fields[0],
+            'roomID': fields[1],
+            'droomID': fields[2],
+            'username': fields[3],
+            'giftname': fields[4],
+            'aname': fields[5]
+        }
+
+    def _parse_u2u(self, fields):
+        return {
+            'type': 'gpbc',
+            'time': fields[0],
+            'roomID': fields[1],
+            'username': fields[2],
+            'rusername': fields[3],
+            'pnm': fields[4]
+        }
+
+    def _parse_uenter(self, fields):
+        return {
+            'type': 'uenter',
+            'time': fields[0],
+            'roomID': fields[1],
+            'username': fields[2],
+            'userlevel': fields[3]
+        }
 
 
 def parse_raw(parser, line):

@@ -17,150 +17,112 @@ class RDS(object):
         self.logger = get_logger("ETL-FACT")
 
     def store(self):
-        self.executor.submit(self._store_room_top_user_hourly)
-        self.executor.submit(self._store_room_top_user_daily)
-        self.executor.submit(self._store_site_top_user_hourly)
-        self.executor.submit(self._store_site_top_user_daily)
-        self.executor.submit(self._store_room_stat_hourly)
-        self.executor.submit(self._store_room_stat_daily)
-        self.executor.submit(self._store_site_stat_hourly)
-        self.executor.submit(self._store_site_stat_daily)
+        self.executor.submit(self._store_top_user, is_site=False)
+        self.executor.submit(self._store_top_user, is_site=True)
+
+        self.executor.submit(self._store_stat, is_site=False, is_daily=False)
+        self.executor.submit(self._store_stat, is_site=False, is_daily=True)
+        self.executor.submit(self._store_stat, is_site=True, is_daily=False)
+        self.executor.submit(self._store_stat, is_site=True, is_daily=True)
+
         self.executor.shutdown(wait=True)
 
-    def _store_room_top_user_hourly(self):
+    def _store_top_user(self, is_site):
         date_str = self.date.strftime("%Y_%m_%d")
-        df = pd.read_csv(os.path.join(self.repo, '%s_room_top_user_hourly.csv' % date_str))
+
+        d = {'order_by_dcount': TOP_TYPE_DCOUNT,
+             'order_by_gcount': TOP_TYPE_GCOUNT,
+             'order_by_expense': TOP_TYPE_EXPENSE,
+             }
+
+        time_type = 'daily'
+        target_type = 'site' if is_site else 'room'
+
+        for suffix, ttype in d.items():
+            fname = '%s_%s_top_user_%s_%s.csv' % (date_str, target_type, time_type, suffix)
+            df = pd.read_csv(os.path.join(self.repo, fname))
+
+            for index, row in df.iterrows():
+                try:
+                    date_key = self.dates[self.date.strftime("%Y_%m_%d")]
+
+                    user_key = row['user']
+                    # User.get_or_create(user_key=user_key, defaults={'user_id': user_key})
+
+                    dcount = row['dcount']
+                    gcount = row['gcount']
+                    expense = row['expense']
+
+                    if is_site:
+                        SiteDailyTopUser.create(user_key=user_key, date_key=date_key,
+                                                dcount=dcount, gcount=gcount, expense=expense, ttype=ttype)
+                    else:
+                        room, _ = Room.get_or_create(room_key=row['room'], room_id=row['room'])
+                        room_key = room.room_key
+
+                        RoomDailyTopUser.create(room_key=room_key, user_key=user_key,
+                                                date_key=date_key,
+                                                dcount=dcount, gcount=gcount, expense=expense, ttype=ttype)
+                except Exception:
+                    self.logger.exception('{} index:{} {}'.format(fname, index, repr(row)))
+
+    def _store_stat(self, is_site, is_daily):
+        date_str = self.date.strftime("%Y_%m_%d")
+
+        time_type = 'daily' if is_daily else 'hourly'
+        target_type = 'site' if is_site else 'room'
+
+        fname = '%s_%s_%s.csv' % (date_str, target_type, time_type)
+        df = pd.read_csv(os.path.join(self.repo, fname))
 
         for index, row in df.iterrows():
             try:
-                room, _ = Room.get_or_create(room_id=row['room'])
-
-                user_key = row['user']
-                room_key = room.room_key
-
-                date_key = self.dates[self.date.strftime("%Y_%m_%d")]
-                hour_key = row['hour'] + 1
-
-                RoomHourlyTopUser.create(room_key=room_key, user_key=user_key,
-                                         date_key=date_key, hour_key=hour_key,
-                                         dcount=row['dcount'], gcount=row['gcount'],
-                                         expense=row['expense'])
-            except Exception:
-                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
-
-    def _store_room_top_user_daily(self):
-        date_str = self.date.strftime("%Y_%m_%d")
-        df = pd.read_csv(os.path.join(self.repo, '%s_room_top_user_daily.csv' % date_str))
-
-        for index, row in df.iterrows():
-            try:
-                room, _ = Room.get_or_create(room_id=row['room'])
-
-                user_key = row['user']
-                room_key = room.room_key
 
                 date_key = self.dates[self.date.strftime("%Y_%m_%d")]
 
-                RoomDailyTopUser.create(room_key=room_key, user_key=user_key, date_key=date_key,
-                                        dcount=row['dcount'], gcount=row['gcount'],
-                                        expense=row['expense'])
+                ucount = row['ucount']
+                ducount = row['ducount']
+                gucount = row['gucount']
+                dcount = row['dcount']
+                gcount = row['gcount']
+                income = row['income']
+
+                if is_site:
+                    if is_daily:
+                        SiteDailyStat.create(date_key=date_key,
+                                             ucount=ucount, ducount=ducount, gucount=gucount,
+                                             dcount=dcount, gcount=gcount, income=income)
+                    else:
+                        hour_key = row['hour'] + 1
+                        SiteHourlyStat.create(date_key=date_key, hour_key=hour_key,
+                                              ucount=ucount, ducount=ducount, gucount=gucount,
+                                              dcount=dcount, gcount=gcount, income=income)
+
+                else:
+                    room, _ = Room.get_or_create(room_key=row['room'], room_id=row['room'])
+                    room_key = room.room_key
+
+                    try:
+                        cate_map = RoomCateMap.get(RoomCateMap.room_key == int(row['room']))
+                    except:
+                        self.logger.warning('ROOM NOT RECORDED! {} index:{} {}'.format(fname, index, row['room']))
+                        continue
+
+                    cate_key = cate_map.cate_key
+
+                    if is_daily:
+                        RoomDailyStat.create(room_key=room_key, date_key=date_key, cate_key=cate_key,
+                                             ucount=ucount, ducount=ducount, gucount=gucount,
+                                             dcount=dcount, gcount=gcount, income=income)
+                    else:
+                        hour_key = row['hour'] + 1
+
+                        RoomHourlyStat.create(room_key=room_key, cate_key=cate_key,
+                                              date_key=date_key, hour_key=hour_key,
+                                              ucount=ucount, ducount=ducount, gucount=gucount,
+                                              dcount=dcount, gcount=gcount, income=income)
             except Exception:
-                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
-
-    def _store_site_top_user_hourly(self):
-        date_str = self.date.strftime("%Y_%m_%d")
-        df = pd.read_csv(os.path.join(self.repo, '%s_site_top_user_hourly.csv' % date_str))
-
-        for index, row in df.iterrows():
-            try:
-                user_key = row['user']
-                date_key = self.dates[self.date.strftime("%Y_%m_%d")]
-                hour_key = row['hour'] + 1
-
-                SiteHourlyTopUser.create(user_key=user_key, date_key=date_key, hour_key=hour_key,
-                                         dcount=row['dcount'], gcount=row['gcount'],
-                                         expense=row['expense'])
-            except Exception:
-                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
-
-    def _store_site_top_user_daily(self):
-        date_str = self.date.strftime("%Y_%m_%d")
-        df = pd.read_csv(os.path.join(self.repo, '%s_site_top_user_daily.csv' % date_str))
-
-        for index, row in df.iterrows():
-            try:
-                user_key = row['user']
-                date_key = self.dates[self.date.strftime("%Y_%m_%d")]
-
-                SiteDailyTopUser.create(user_key=user_key, date_key=date_key,
-                                        dcount=row['dcount'], gcount=row['gcount'],
-                                        expense=row['expense'])
-            except Exception:
-                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
-
-    def _store_room_stat_hourly(self):
-        date_str = self.date.strftime("%Y_%m_%d")
-        df = pd.read_csv(os.path.join(self.repo, '%s_room_hourly.csv' % date_str))
-
-        for index, row in df.iterrows():
-            try:
-                room, _ = Room.get_or_create(room_id=row['room'])
-                room_key = room.room_key
-
-                date_key = self.dates[self.date.strftime("%Y_%m_%d")]
-                hour_key = row['hour'] + 1
-
-                RoomHourlyStat.create(room_key=room_key, date_key=date_key, hour_key=hour_key,
-                                      ucount=row['ucount'], ducount=row['ducount'], gucount=row['gucount'],
-                                      dcount=row['dcount'], gcount=row['gcount'], income=row['income'])
-            except Exception:
-                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
-
-    def _store_room_stat_daily(self):
-        date_str = self.date.strftime("%Y_%m_%d")
-        df = pd.read_csv(os.path.join(self.repo, '%s_room_daily.csv' % date_str))
-
-        for index, row in df.iterrows():
-            try:
-                room, _ = Room.get_or_create(room_id=row['room'])
-                room_key = room.room_key
-
-                date_key = self.dates[self.date.strftime("%Y_%m_%d")]
-
-                RoomDailyStat.create(room_key=room_key, date_key=date_key,
-                                     ucount=row['ucount'], ducount=row['ducount'], gucount=row['gucount'],
-                                     dcount=row['dcount'], gcount=row['gcount'], income=row['income'])
-            except Exception:
-                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
-
-    def _store_site_stat_hourly(self):
-        date_str = self.date.strftime("%Y_%m_%d")
-        df = pd.read_csv(os.path.join(self.repo, '%s_site_hourly.csv' % date_str))
-
-        for index, row in df.iterrows():
-            try:
-                date_key = self.dates[self.date.strftime("%Y_%m_%d")]
-                hour_key = row['hour'] + 1
-
-                SiteHourlyStat.create(date_key=date_key, hour_key=hour_key,
-                                      ucount=row['ucount'], ducount=row['ducount'], gucount=row['gucount'],
-                                      dcount=row['dcount'], gcount=row['gcount'], income=row['income'])
-            except Exception:
-                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
-
-    def _store_site_stat_daily(self):
-        date_str = self.date.strftime("%Y_%m_%d")
-        df = pd.read_csv(os.path.join(self.repo, '%s_site_daily.csv' % date_str))
-
-        for index, row in df.iterrows():
-            try:
-                date_key = self.dates[self.date.strftime("%Y_%m_%d")]
-
-                SiteDailyStat.create(date_key=date_key,
-                                     ucount=row['ucount'], ducount=row['ducount'], gucount=row['gucount'],
-                                     dcount=row['dcount'], gcount=row['gcount'], income=row['income'])
-            except Exception:
-                self.logger.exception('{} index:{} {}'.format(date_str, index, repr(row)))
+                self.logger.exception('{} index:{} {}'.format(fname, index, repr(row)))
 
 
 if __name__ == '__main__':
