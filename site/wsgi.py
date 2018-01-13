@@ -45,13 +45,16 @@ def cate_detail(cid):
 
     return render_template('cate.html', cid=cid)
 
+
 @app.route('/ranking')
 def ranking():
     return render_template('top.html')
 
+
 @app.route('/totalStatistics')
 def totalStatistics():
     return render_template('statistics.html')
+
 
 @app.route('/api/live/<int:page>')
 def api_live(page):
@@ -183,8 +186,8 @@ def api_stat_site_top_room_at_date(date):
             'roomName': row.room.name,
             'dcount': row.dcount,
             'gcount': row.gcount,
-            'income': row.income,
-            'factor': row.f,
+            'income': int(row.income / 100),
+            'factor': int(row.f / 100),
             'order': order
         })
         order += 1
@@ -219,8 +222,8 @@ def api_stat_site_top_room_in_date_range(start, end):
             'roomName': row.room.name,
             'dcount': row.dcount,
             'gcount': row.gcount,
-            'income': row.income,
-            'factor': row.f,
+            'income': int(row.income / 100),
+            'factor': int(row.f / 100),
             'order': order
         })
         order += 1
@@ -257,8 +260,8 @@ def api_stat_site_top_cate_at_date(date):
             'cateName': row.cate.name,
             'dcount': row.dsum,
             'gcount': row.gsum,
-            'income': row.isum,
-            'factor': row.f,
+            'income': int(row.isum / 100),
+            'factor': int(row.f / 100),
             'order': order
         })
         order += 1
@@ -296,8 +299,8 @@ def api_stat_site_top_cate_in_date_range(start, end):
             'cateName': row.cate.name,
             'dcount': row.dsum,
             'gcount': row.gsum,
-            'income': row.isum,
-            'factor': row.f,
+            'income': int(row.isum / 100),
+            'factor': int(row.f / 100),
             'order': order
         })
         order += 1
