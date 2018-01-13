@@ -17,15 +17,21 @@
                                <div class="tab-content" style="height:auto">
                                   <div class="tab-pane active" id="tab1" style="height:500px;width:100%;border:darkgray">
                                       <div class="row"style="margin-right:5%">
-                                          <div class="from-group col-md-9">
-                                              <label>Date Picking:</label>
+                                          <div class="col-md-2">
+                                               <label style="margin-left:30px;margin-top:10px;">Date Picking:</label>
+                                          </div>
+                                          <div class="col-md-8">
+
                                               <div class="input-group date form_date" data-date=""  data-date-format="yyyy-mm-dd" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
-                                              <input class="form-control" value="2017-10-01" size="16" type="text" value="" readonly>
+                                              <input class="form-control" id="input1" value="2017-10-01" size="16" type="text" value="" readonly>
                                               <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
                                               <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
                                               </div>
                                               <input type="hidden" id="dtp_input2" value="" /><br/>
                                           </div>
+                                          <div class="col-md-2">
+                                                  <button class="ui red button" id="btn1"onclick="changeManner(1)">确认</button>
+                                              </div>
 
                                       </div>
                                       <div class="row">
@@ -38,23 +44,37 @@
 
                                       <div class="row">
                                           <div class="from-group" style="margin-left:2%;margin-right:5%">
-                                              <div class="col-md-6">
-                                                   <label>Start Date Picking:</label>
+                                              <div class="row">
+                                                  <div class="col-md-5">
+                                                      <label>Start Date Picking:</label>
+                                                  </div>
+                                                   <div class="col-md-5">
+                                                      <label>End Date Picking:</label>
+                                                  </div>
+
+                                              </div>
+                                              <div class="row">
+                                              <div class="col-md-5">
+
                                                    <div class="input-group date form_date" data-date=""  data-date-format="yyyy-mm-dd" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
-                                                        <input class="form-control" value="2017-10-01" size="16" type="text" value="" readonly>
+                                                        <input id="input2" class="form-control" value="2017-10-01" size="16" type="text" value="" readonly>
                                                         <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
                                                         <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
                                                    </div>
                                                    <input type="hidden" id="dtp_input2" value="" /><br/>
                                               </div>
-                                              <div class="col-md-6">
-                                                  <label>End Date Picking:</label>
+                                              <div class="col-md-5">
+
                                                   <div class="input-group date form_date" data-date=""  data-date-format="yyyy-mm-dd" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
-                                                        <input class="form-control" value="2017-10-01" size="16" type="text" value="" readonly>
+                                                        <input id="input3" class="form-control" value="2017-10-01" size="16" type="text" value="" readonly>
                                                         <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
                                                         <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
                                                   </div>
                                                   <input type="hidden" id="dtp_input2" value="" /><br/>
+                                              </div>
+                                              <div class="col-md-2">
+                                                  <button class="ui red button" style="margin-bottom:0" id="btn2" onclick="changeManner(2)">确认</button>
+                                              </div>
                                               </div>
                                           </div>
                                           <div class="from-group" >
@@ -83,48 +103,7 @@
                        </div>
            </div>
            <div class="row">
-               <div class="col-md-7">
-                   <div class="panel panel-default">
-                       <div class="panel-heading">
-                           <h3 class="panel-title">用户排行榜</h3>
-                            <div class="actions pull-right">
-                                    <i class="fa fa-chevron-down"></i>
 
-                           </div>
-                       </div>
-                       <div class="panel-body" style="display:block;">
-                           <div class="tab-wrapper tab bottom tab-primary">
-                               <div class="tab-content" style="height:auto">
-                                   <div class="tab-pane active" id="tab1D" style="height:500px;width:100%;border:darkgray" >
-
-                                   </div>
-                                   <div class="tab-pane active" id="tab2D" style=" display:none;height:500px;width:100%;border:darkgray">
-
-                                   </div>
-                                    <div class="tab-pane active" id="tab3D" style=" display:none;height:500px;width:100%;border:darkgray">
-
-                                   </div>
-
-                               </div>
-                               <ul class="nav nav-tabs">
-                                   <li class="active">
-                                       <a href="#tab1D" data-toggle="tab" onclick="">花费排名</a>
-                                   </li>
-                                    <li class="">
-                                       <a href="#tab2D" data-toggle="tab" onclick="">礼物排名</a>
-                                   </li>
-                                    <li class="">
-                                       <a href="#tab3D" data-toggle="tab" onclick="">弹幕排名</a>
-                                   </li>
-
-                               </ul>
-                           </div>
-
-                       </div>
-
-                   </div>
-
-               </div>
                <div class="col-md-5">
                    <div class="panel panel-default">
                        <div class="panel-heading">
@@ -138,9 +117,57 @@
                            <div class="tab-wrapper tab bottom tab-primary">
                                <div class="tab-content" style="height:auto">
                                    <div class="tab-pane active" id="tabRight" style="height:543px;width:100%;border:darkgray" >
-
+                                      <div class="rightGraph" id="leftGraph"></div>
                                    </div>
                                </div>
+                           </div>
+
+                       </div>
+
+                   </div>
+
+               </div>
+                <div class="col-md-7">
+                   <div class="panel panel-default">
+                       <div class="panel-heading">
+                           <h3 class="panel-title">用户排行榜</h3>
+                            <div class="actions pull-right">
+                                    <i class="fa fa-chevron-down"></i>
+
+                           </div>
+                       </div>
+                       <div class="panel-body" style="display:block;">
+                           <div class="tab-wrapper tab bottom tab-primary">
+                               <div class="tab-content" style="height:auto">
+                                   <div class="tab-pane active" id="tab1D" style="height:500px;width:100%;border:darkgray" >
+                                        <div class="rightGraph" id="rightGraph1">
+
+                                        </div>
+                                   </div>
+                                   <div class="tab-pane active" id="tab2D" style=" display:none;height:500px;width:100%;border:darkgray">
+                                        <div class="rightGraph" id="rightGraph2">
+
+                                        </div>
+                                   </div>
+                                    <div class="tab-pane active" id="tab3D" style=" display:none;height:500px;width:100%;border:darkgray">
+                                            <div class="rightGraph" id="rightGraph3">
+
+                                        </div>
+                                   </div>
+
+                               </div>
+                               <ul class="nav nav-tabs">
+                                   <li class="active">
+                                       <a href="#tab1D" data-toggle="tab" onclick="changeDownTab(1)">花费排名</a>
+                                   </li>
+                                    <li class="">
+                                       <a href="#tab2D" data-toggle="tab" onclick="changeDownTab(2)">礼物排名</a>
+                                   </li>
+                                    <li class="">
+                                       <a href="#tab3D" data-toggle="tab" onclick="changeDownTab(3)">弹幕排名</a>
+                                   </li>
+
+                               </ul>
                            </div>
 
                        </div>
