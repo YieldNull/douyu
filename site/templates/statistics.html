@@ -2,15 +2,12 @@
 
     {% block content %}
     <div class="bigDivv"style="height:910px;">
-       <div class="row" style="width:96%;margin-left:2%;">
-           <div class="col-md-12" id="right"style="height:910px">
-               <div class="row" style="width:100%;height:100%">
-                   <div class="row total" style="height:100px;margin-bottom:20px;width:100%;">
-                       <div class="col-md-12" style="margin-top:30px">
-                           <div class="col-md-2">
-                               <label style="margin-left:40px;margin-top:10px;">Paking Time:</label>
+                   <div class="row total" style="height:100px;margin-bottom:20px;width: 96.5%;margin-left:0.25%">
+                       <div class="col-md-12" style="margin-top:30px;width:70%;">
+                           <div class="col-md-3">
+                               <label style="margin-left:50px;margin-top:10px;">Paking Time:</label>
                            </div>
-                       <div class="from-group col-md-7">
+                       <div class="from-group col-md-4">
 
                                               <div class="input-group date form_date" data-date=""  data-date-format="yyyy-mm-dd" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd" style="height:20px;">
                                               <input id="inputt" class="form-control" value="2017-12-01" size="12" type="text" value="" readonly>
@@ -19,13 +16,25 @@
                                               </div>
                                               <input type="hidden" id="dtp_input2" value="" /><br/>
                        </div>
-                       <div class="from-group col-md-3">
-                           <button class="ui red button" style="margin-bottom:0" id="btn3" onclick="initSite($('#inputt).val())">确认</button>
+                       <div class="from-group col-md-5">
+
+                           <button class="ui basic button " style="margin-bottom:0;width:20px;" id="btn3"onclick="initTotalSite($('#inputt').val())">
+                               <i class="home icon"style="padding-right:20px;"></i>
+
+                           </button>
+                           <button class="ui basic button" style="margin-bottom:0;width:20px;" id="btn4"onclick="initRoomAction($('#inputt').val())">
+                               <i class="smile icon"style="padding-right:20px;"></i>
+
+                           </button>
+                           <button class="ui basic button" style="margin-bottom:0;width:20px;align-content: center" id="btn5"onclick="initUserAction($('#inputt').val())">
+                               <i class="user icon"style="padding-right:20px;"></i>
+
+                           </button>
                        </div>
                        </div>
                        <!--<div class="row">
                            <div class="col-md-2">
-                               <label style="margin-left:40px;margin-top:10px;">Paking Time:</label>
+                               <label style="margin-left:40px;margin-top:10px;">Paking Time:</label>ß
                            </div>
                            <div class="from-group col-md-4">
                                                    <div class="input-group date form_date" data-date=""  data-date-format="yyyy-mm-dd" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
@@ -46,69 +55,32 @@
                            <div class="col-md-2"></div>
                        </div>-->
                    </div>
-                   <div class="row" style="height:360px;width:100%;margin-bottom:40px">
+                   <div class="row" style="height:360px;width:100%;margin-bottom:20px">
                        <div class="col-md-8" style="height:360px;">
-                           <div id="graph1" class="total"style="width:100%;height:360px;">
+                           <div id="graph1" class="total"style="width:100%;height:350px;padding-top:10px;">
 
                            </div>
 
                        </div>
                        <div class="col-md-4 "style="height:360px;">
-                           <div id="graph2"class="total" style="width:100%;height:360px">
+                           <div id="graph2"class="total" style="width:100%;height:350px;">
 
                            </div>
                        </div>
                    </div>
-                  <!-- <div class="row" style="height:125px;width:100%;margin-bottom:20px">
-                       <div class="col-md-4"style="height:125px;">
-                           <div class="total" style="width:100%;height:125px;">
-                               <div class="detail tile-red hvr-grow">
-                                   <div class="content">
-                                       <span class="glyphicon glyphicon-user"></span>
-                                       <p>User</p>
-                                       <h1 id="userCount"></h1>
-                                   </div>
-                               </div>
-                           </div>
-                       </div>
-                       <div class="col-md-4"style="height:125px;">
-                              <div class="total" style="width:100%;height:125px;">
-                               <div class="detail tile-red hvr-grow">
-                                   <div class="content">
-                                       <span class="glyphicon glyphicon-bell"></span>
-                                       <p>Gift</p>
-                                       <h1 id="giftCount"></h1>
-                                   </div>
-                               </div>
-                           </div>
-                       </div>
-                       <div class="col-md-4"style="height:125px;">
-                             <div class="total" style="width:100%;height:125px;">
-                               <div class="detail tile-red hvr-grow">
-                                   <div class="content">
-                                       <span class="glyphicon glyphicon-user"></span>
-                                       <p>Danmu</p>
-                                       <h1 id="giftCount"></h1>
-                                   </div>
-                               </div>
-                           </div>
-                       </div>
-                   </div>-->
                    <div class="row" style="height:360px;width:100%;" >
-                       <div class="col-md-6"style="height: 360px">
-                            <div id="graph3" class="total"style="width:100%;height:360px;">
+                       <div class="col-md-5"style="height: 360px">
+                            <div id="graph4" class="total"style="width:100%;height:350px;padding-top:10px;">
 
                            </div>
                        </div>
-                       <div class="col-md-6"style="height: 360px">
-                            <div id="graph4" class="total"style="width:100%;height:360px;">
+                       <div class="col-md-7"style="height: 360px">
+                            <div id="graph3" class="total"style="width:100%;height:350px;padding-top:10px;">
 
                            </div>
                        </div>
+
                    </div>
-               </div>
-           </div>
-       </div>
     </div>
     {% endblock %}
 
