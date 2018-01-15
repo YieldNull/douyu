@@ -3,9 +3,9 @@ import pymongo
 import hashlib
 import time
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, abort, url_for, request
-from peewee import fn, SQL
+from peewee import fn, SQL, JOIN
 
 from settings import MONGO_DATABASE, MONGO_URI, PAGINATE_BY
 from common.ws import RedisClient
@@ -392,6 +392,140 @@ def api_stat_site_top_user_in_date_range(start, end, ttype):
             'expense': row.eavg,
         })
         order += 1
+    return jsonify({'code': 0, 'msg': 'success', 'data': payload})
+
+
+@app.route('/api/stat/site/hourly/<string:date>')
+def api_stat_site_hourly(date):
+    try:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    query = SiteHourlyStat.select() \
+        .join(Date, on=(SiteHourlyStat.date == Date.date_key)) \
+        .join(Hour, on=(SiteHourlyStat.hour == Hour.hour_key)) \
+        .where(Date.date == date) \
+        .order_by(Hour.hour)
+
+    payload = []
+    for row in query:
+        payload.append({
+            'hour': row.hour.hour,
+            'ucount': row.ucount,
+            'gucount': row.gucount,
+            'ducount': row.ducount,
+            'gcount': row.gcount,
+            'dcount': row.dcount,
+            'income': int(row.income / 100)
+        })
+    return jsonify({'code': 0, 'msg': 'success', 'data': payload})
+
+
+@app.route('/api/stat/cate/hourly/<string:date>/<string:dim>')
+def api_stat_cate_hourly(date, dim):
+    dim_map = {
+        'danmu': RoomHourlyStat.dcount,
+        'gift': RoomHourlyStat.gcount,
+        'income': RoomHourlyStat.income
+    }
+
+    try:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+        dim_model = dim_map[dim]
+        limit = int(request.args.get('limit', 5))
+        limit = limit if limit > 0 else 5
+    except ValueError or KeyError:
+        return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    sub_query = RoomHourlyStat.select(
+        RoomHourlyStat.cate,
+    ).join(Date, on=(RoomHourlyStat.date == Date.date_key)) \
+        .where(Date.date == date) \
+        .group_by(RoomHourlyStat.cate) \
+        .order_by(fn.SUM(dim_model).desc()) \
+        .limit(limit).alias('topc')
+
+    query = RoomHourlyStat.select(
+        RoomHourlyStat.hour,
+        RoomHourlyStat.cate,
+        fn.SUM(RoomHourlyStat.dcount).alias('dsum'),
+        fn.SUM(RoomHourlyStat.gcount).alias('gsum'),
+        fn.SUM(RoomHourlyStat.income).alias('isum')
+    ).join(Hour, on=(RoomHourlyStat.hour == Hour.hour_key)) \
+        .join(Date, on=(RoomHourlyStat.date == Date.date_key)) \
+        .join(sub_query, on=(RoomHourlyStat.cate == sub_query.c.cate_key)) \
+        .where((Date.date == date)) \
+        .group_by(Hour.hour, RoomHourlyStat.cate) \
+        .order_by(Hour.hour, RoomHourlyStat.cate)
+
+    cates = {}
+    for row in query:
+        hours = cates.setdefault(row.cate.name, [{
+            'hour': h,
+            'gcount': 0,
+            'dcount': 0,
+            'income': 0
+        } for h in range(24)])
+
+        hours[row.hour.hour] = {
+            'hour': row.hour.hour,
+            'gcount': row.gsum,
+            'dcount': row.dsum,
+            'income': int(row.isum / 100)
+        }
+
+    def sum_aux(target):
+        import functools
+        return {
+            'dcount': functools.reduce(lambda acc, a: acc + a['dcount'], target, 0),
+            'gcount': functools.reduce(lambda acc, a: acc + a['gcount'], target, 0),
+            'income': functools.reduce(lambda acc, a: acc + a['income'], target, 0)
+        }
+
+    payload = [{'cate': cate, 'data': data, 'total': sum_aux(data)} for cate, data in cates.items()]
+
+    return jsonify({'code': 0, 'msg': 'success', 'data': payload})
+
+
+@app.route('/api/stat/weekly/hourly/<string:date>')
+def api_stat_weekly_hourly(date):
+    try:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+    except ValueError or KeyError:
+        return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    query = SiteHourlyStat.select() \
+        .join(Date, on=(SiteHourlyStat.date == Date.date_key)) \
+        .where((Date.date <= date) & (Date.date >= date - timedelta(days=6))) \
+        .order_by(SiteHourlyStat.date)
+
+    days = {}
+    for row in query:
+        hours = days.setdefault(datetime.strftime(row.date.date, '%Y-%m-%d'), [{
+            'hour': h,
+            'ucount': 0,
+            'gucount': 0,
+            'ducount': 0,
+            'gcount': 0,
+            'dcount': 0,
+            'income': 0
+        } for h in range(24)])
+
+        hours[row.hour.hour] = {
+            'hour': row.hour.hour,
+            'ucount': row.ucount,
+            'gucount': row.gucount,
+            'ducount': row.ducount,
+            'gcount': row.gcount,
+            'dcount': row.dcount,
+            'income': int(row.income / 100)
+        }
+
+    payload = [{'date': date,
+                'weekday': datetime.strptime(date, '%Y-%m-%d').weekday(),
+                'data': data, } for date, data in days.items()]
+
     return jsonify({'code': 0, 'msg': 'success', 'data': payload})
 
 
