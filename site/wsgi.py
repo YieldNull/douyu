@@ -529,5 +529,37 @@ def api_stat_weekly_hourly(date):
     return jsonify({'code': 0, 'msg': 'success', 'data': payload})
 
 
+@app.route('/api/stat/cate/daily/<string:date>')
+def api_stat_site_cate_daily(date):
+    try:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+    except ValueError or KeyError:
+        return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    query = RoomHourlyStat.select(
+        RoomHourlyStat.cate,
+        fn.SUM(RoomHourlyStat.dcount).alias('dsum'),
+        fn.SUM(RoomHourlyStat.gcount).alias('gsum'),
+        fn.SUM(RoomHourlyStat.ucount).alias('usum'),
+        fn.SUM(RoomHourlyStat.income).alias('isum'),
+        fn.COUNT(fn.DISTINCT(RoomHourlyStat.room)).alias('rsum')
+    ).join(Date, on=(RoomHourlyStat.date == Date.date_key)) \
+        .where(Date.date == date) \
+        .group_by(RoomHourlyStat.cate)
+
+    payload = []
+    for row in query:
+        payload.append({
+            'cate': row.cate.name,
+            'income': row.isum,
+            'ucount': row.usum,
+            'gcount': row.gsum,
+            'dcount': row.dsum,
+            'rcount': row.rsum
+        })
+
+    return jsonify({'code': 0, 'msg': 'success', 'data': payload})
+
+
 if __name__ == '__main__':
     app.run(debug=True)

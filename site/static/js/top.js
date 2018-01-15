@@ -40,36 +40,36 @@ var jsonParser = {
     cate: function (payload) {
         return payload.map(function (row) {
             return {"cate": row["cateName"], "value": row["factor"]}
-        })
+        }).reverse()
     },
     userDanmu: function (payload) {
         return {
             "user": payload.map(function (row) {
                 return row["user"]
-            }),
+            }).reverse(),
             "danmu": payload.map(function (row) {
                 return row["dcount"]
-            })
+            }).reverse()
         }
     },
     userGift: function (payload) {
         return {
             "user": payload.map(function (row) {
                 return row["user"]
-            }),
+            }).reverse(),
             "gift": payload.map(function (row) {
                 return row["gcount"]
-            })
+            }).reverse()
         }
     },
     userExpense: function (payload) {
         return {
             "user": payload.map(function (row) {
                 return row["user"]
-            }),
+            }).reverse(),
             "expense": payload.map(function (row) {
                 return row["expense"]
-            })
+            }).reverse()
         }
     }
 };
@@ -201,7 +201,7 @@ function rankingOneday(dateOne) {
         type: 'GET',
         contentType: 'application/json',
         success: function (data) {
-            chartOption.topCateSingleDay = onedayTopCate(jsonParser.cate(data["data"]))
+            chartOption.topCateSingleDay = drawTopCate(jsonParser.cate(data["data"]))
         }
     });
 
@@ -211,7 +211,7 @@ function rankingOneday(dateOne) {
         type: 'GET',
         contentType: 'application/json',
         success: function (data) {
-            chartOption.topUserDanmuSingleDay = onedayTopUserDanmu(jsonParser.userDanmu(data["data"]))
+            chartOption.topUserDanmuSingleDay = drawTopUserByDanmu(jsonParser.userDanmu(data["data"]))
         }
     });
 
@@ -221,7 +221,7 @@ function rankingOneday(dateOne) {
         type: 'GET',
         contentType: 'application/json',
         success: function (data) {
-            chartOption.topUserGiftSingleDay = onedayTopUserGift(jsonParser.userGift(data["data"]))
+            chartOption.topUserGiftSingleDay = drawTopUserByGift(jsonParser.userGift(data["data"]))
         }
     });
 
@@ -231,7 +231,7 @@ function rankingOneday(dateOne) {
         type: 'GET',
         contentType: 'application/json',
         success: function (data) {
-            chartOption.topUserExpenseSingleDay = onedayTopUserExpence(jsonParser.userExpense(data["data"]))
+            chartOption.topUserExpenseSingleDay = drawTopUserByExpense(jsonParser.userExpense(data["data"]))
         }
     });
 }
@@ -254,7 +254,7 @@ function rankingSomeday(date1, date2) {
         type: 'GET',
         contentType: 'application/json',
         success: function (data) {
-            chartOption.topCateRange = SomedayTopCate(jsonParser.cate(data["data"]));
+            chartOption.topCateRange = drawTopCate(jsonParser.cate(data["data"]));
         }
     });
 
@@ -265,7 +265,7 @@ function rankingSomeday(date1, date2) {
         contentType: 'application/json',
         success: function (data) {
 
-            chartOption.topUserDanmuRange = SomedayTopUserDanmu(jsonParser.userDanmu(data["data"]));
+            chartOption.topUserDanmuRange = drawTopUserByDanmu(jsonParser.userDanmu(data["data"]));
         }
     });
 
@@ -275,7 +275,7 @@ function rankingSomeday(date1, date2) {
         type: 'GET',
         contentType: 'application/json',
         success: function (data) {
-            chartOption.topUserGiftRange = SomedayTopUserGift(jsonParser.userGift(data["data"]));
+            chartOption.topUserGiftRange = drawTopUserByGift(jsonParser.userGift(data["data"]));
         }
     });
 
@@ -285,7 +285,7 @@ function rankingSomeday(date1, date2) {
         type: 'GET',
         contentType: 'application/json',
         success: function (data) {
-            chartOption.topUserExpenseRange = SomedayTopUserExpense(jsonParser.userExpense(data["data"]));
+            chartOption.topUserExpenseRange = drawTopUserByExpense(jsonParser.userExpense(data["data"]));
         }
     });
 
@@ -308,6 +308,12 @@ function roomSomedayTopRoom(data) {
         angleAxis: {
             type: 'category',
             data: data.room
+        },
+        toolbox: {
+            feature: {
+                restore: {},
+                saveAsImage: {}
+            }
         },
         radiusAxis: {},
         polar: {},
@@ -345,327 +351,28 @@ function roomSomedayTopRoom(data) {
     }
 }
 
-function SomedayTopUserDanmu(data) {
-    console.table(data)
-    var myChart = echarts.init(document.getElementById('rightGraph3'));
-    var option = {
-        title: {
-            text: '用户弹幕数排行榜',
-        },
-        tooltip: {
-            trigger: 'axis',
-            axisPointer: {
-                type: 'shadow'
-            },
-            formatter: "{a} <br/>{b} : {c}%"
-        },
-        legend: {
-            data: ['弹幕数']
-        },
-        grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '3%',
-            containLabel: true
-        },
-        xAxis: {
-            type: 'value',
-            boundaryGap: [0, 0.01],
-            "axisLabel": {
-                "interval": 0,
-                formatter: '{value}%',
-            }
-        },
-        yAxis: {
-            type: 'category',
-            data: data.user
-        },
-        series: [{
-            name: '2',
-            type: 'bar',
-            data: data.danmu
-        }]
-
-    };
-    myChart.setOption(option);
-
-    return {
-        chart: myChart,
-        option: option
-    }
-}
-
-function SomedayTopUserGift(data) {
-    var myChart = echarts.init(document.getElementById('rightGraph2'));
-    var option = {
-        backgroundColor: '#0E2A43',
-        legend: {
-            bottom: 20,
-            textStyle: {
-                color: '#fff',
-            },
-            data: ['花费']
-        },
-        grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '10%',
-            containLabel: true
-        },
-
-        tooltip: {
-            show: "true",
-            trigger: 'axis',
-            axisPointer: { // 坐标轴指示器，坐标轴触发有效
-                type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
-            }
-        },
-        xAxis: {
-            type: 'value',
-            axisTick: {show: false},
-            axisLine: {
-                show: false,
-                lineStyle: {
-                    color: '#fff',
-                }
-            },
-            splitLine: {
-                show: false
-            },
-        },
-        yAxis: [
-            {
-                type: 'category',
-                axisTick: {show: false},
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#fff',
-                    }
-                },
-                data: data.user
-            },
-
-        ],
-        series: [
-            {
-                name: '花费',
-                type: 'bar',
-
-                itemStyle: {
-                    normal: {
-                        show: true,
-                        color: '#277ace',
-                        barBorderRadius: 50,
-                        borderWidth: 0,
-                        borderColor: '#333',
-                    }
-                },
-                barGap: '0%',
-                barCategoryGap: '50%',
-                data: data.gift
-            }
-
-        ]
-    };
-    myChart.setOption(option);
-
-    return {
-        chart: myChart,
-        option: option
-    }
-}
-
-function SomedayTopUserExpense(data) {
-
-    var myChart = echarts.init(document.getElementById('rightGraph1'));
-    var option = {
-        backgroundColor: '#0E2A43',
-        legend: {
-            bottom: 20,
-            textStyle: {
-                color: '#fff',
-            },
-            data: ['花费']
-        },
-        grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '10%',
-            containLabel: true
-        },
-
-        tooltip: {
-            show: "true",
-            trigger: 'axis',
-            axisPointer: { // 坐标轴指示器，坐标轴触发有效
-                type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
-            }
-        },
-        xAxis: {
-            type: 'value',
-            axisTick: {show: false},
-            axisLine: {
-                show: false,
-                lineStyle: {
-                    color: '#fff',
-                }
-            },
-            splitLine: {
-                show: false
-            },
-        },
-        yAxis: [
-            {
-                type: 'category',
-                axisTick: {show: false},
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#fff',
-                    }
-                },
-                data: data.user
-            },
-
-        ],
-        series: [
-            {
-                name: '花费',
-                type: 'bar',
-
-                itemStyle: {
-                    normal: {
-                        show: true,
-                        color: '#277ace',
-                        barBorderRadius: 50,
-                        borderWidth: 0,
-                        borderColor: '#333',
-                    }
-                },
-                barGap: '0%',
-                barCategoryGap: '50%',
-                data: data.expense
-            }
-
-        ]
-    };
-    myChart.setOption(option);
-
-    return {
-        chart: myChart,
-        option: option
-    }
-}
-
-function SomedayTopCate(data) {
-    var myChart = echarts.init(document.getElementById('leftGraph'));
-    var option = {
-        "title": {
-            "text": "最受欢迎类别排行榜",
-            "textStyle": {
-                "color": "#bcbfff",
-                "fontWeight": "bold",
-                "fontSize": 14
-            },
-            "top": "4%",
-            "left": "2.2%"
-        },
-        "tooltip": {
-            "trigger": "axis",
-            "axisPointer": { // 坐标轴指示器，坐标轴触发有效
-                "type": "shadow" // 默认为直线，可选为："line" | "shadow"
-            }
-        },
-        "grid": {
-            "left": "3%",
-            "right": "10%",
-            "bottom": "3%",
-            "containLabel": true
-        },
-        "yAxis": [{
-            "type": "category",
-            "data": ["TOP10", "TOP9", "TOP8", "TOP7", "TOP6", "TOP5", "TOP4", "TOP3", "TOP2", "TOP1"],
-            "axisLine": {
-                "show": false
-            },
-            "axisTick": {
-                "show": false,
-                "alignWithLabel": true
-            },
-            "axisLabel": {
-                "textStyle": {
-                    "color": "#ffb069"
-                }
-            }
-        }],
-        "xAxis": [{
-            "type": "value",
-            "axisLine": {
-                "show": false
-            },
-            "axisTick": {
-                "show": false
-            },
-            "axisLabel": {
-                "show": false
-            },
-            "splitLine": {
-                "show": false
-            }
-        }],
-
-        "series": [{
-            "name": "弹幕数",
-            "type": "bar",
-            "data": data,
-            "barCategoryGap": "35%",
-            "label": {
-                "normal": {
-                    "show": true,
-                    "position": "right",
-                    "formatter": function (params) {
-                        return params.data.cate;
-                    },
-                    "textStyle": {
-                        "color": "#bcbfff" //color of value
-                    }
-                }
-            },
-            "itemStyle": {
-                "normal": {
-                    "color": new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
-                        "offset": 0,
-                        "color": "#ffb069" // 0% 处的颜色
-                    }, {
-                        "offset": 1,
-                        "color": "#ec2e85" // 100% 处的颜色
-                    }], false)
-                }
-            }
-        }]
-    };
-    myChart.setOption(option);
-
-    return {
-        chart: myChart,
-        option: option
-    }
-}
 
 //一天的时间图表
 function roomOnedayTopRoom(data) {
     var myChart = echarts.init(document.getElementById('leftRankingOne'));
     var option = {
         title: {
+
             text: "主播排行榜",
             textStyle: {
                 color: 'black',
                 fontSize: 24
+            },
+            left: 'center'
+        },
+        toolbox: {
+            feature: {
+                restore: {},
+                saveAsImage: {}
             }
         },
         legend: {
-            bottom: 20,
+            bottom: 2,
             textStyle: {
                 color: 'gray',
             },
@@ -693,7 +400,7 @@ function roomOnedayTopRoom(data) {
             axisLine: {
                 lineStyle: {
                     color: 'black',
-                    opacity:0.4
+                    opacity: 0.4
                 }
             },
             splitLine: {
@@ -712,7 +419,7 @@ function roomOnedayTopRoom(data) {
                 show: true,
                 lineStyle: {
                     color: 'black',
-                    opacity:0.4
+                    opacity: 0.4
                 }
             },
             data: data.room
@@ -773,15 +480,6 @@ function roomOnedayTopRoom(data) {
                     borderColor: '#333',
                 }
             },
-            label: {
-                normal: {
-                    show: true,
-                    position: 'top',
-                    textStyle: {
-                        color: 'black'
-                    }
-                }
-            },
             barWidth: '10%',
             data: data.income
         }, {
@@ -803,15 +501,7 @@ function roomOnedayTopRoom(data) {
                     borderColor: '#333',
                 }
             },
-            label: {
-                normal: {
-                    show: true,
-                    position: 'top',
-                    textStyle: {
-                        color: 'black'
-                    }
-                }
-            },
+
             data: data.gift
         }, {
             name: '弹幕',
@@ -832,15 +522,7 @@ function roomOnedayTopRoom(data) {
                     borderColor: '#333',
                 }
             },
-            label: {
-                normal: {
-                    show: true,
-                    position: 'top',
-                    textStyle: {
-                        color: 'black'
-                    }
-                }
-            },
+
             barGap: '100%',
             data: data.danmu
         }
@@ -855,21 +537,25 @@ function roomOnedayTopRoom(data) {
     }
 }
 
-function onedayTopUserDanmu(data) {
+function drawTopUserByDanmu(data) {
     var myChart = echarts.init(document.getElementById('rightGraph3'));
     var option = {
+        toolbox: {
+            feature: {
+                restore: {},
+                saveAsImage: {}
+            }
+        },
         title: {
             text: '用户弹幕数排行榜',
+            left: 'center',
         },
         tooltip: {
             trigger: 'axis',
             axisPointer: {
                 type: 'shadow'
             },
-            formatter: "{a} <br/>{b} : {c}%"
-        },
-        legend: {
-            data: ['弹幕数']
+            formatter: "{a} <br/>{b} : {c}"
         },
         grid: {
             left: '3%',
@@ -882,7 +568,6 @@ function onedayTopUserDanmu(data) {
             boundaryGap: [0, 0.01],
             "axisLabel": {
                 "interval": 0,
-                formatter: '{value}%',
             }
         },
         yAxis: {
@@ -892,7 +577,8 @@ function onedayTopUserDanmu(data) {
         series: [{
             name: '弹幕数',
             type: 'bar',
-            data: data.danmu
+            data: data.danmu,
+            barWidth: 10,
         }]
 
     };
@@ -905,15 +591,23 @@ function onedayTopUserDanmu(data) {
     }
 }
 
-function onedayTopUserGift(data) {
+function drawTopUserByGift(data) {
     var myChart = echarts.init(document.getElementById('rightGraph2'));
     var option = {
-        backgroundColor: '#0E2A43',
+        backgroundColor: '#fffff',
+        toolbox: {
+            feature: {
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        title: {
+            text: '用户送礼物排行榜',
+            left: "center",
+        },
         legend: {
+            show: 'true',
             bottom: 20,
-            textStyle: {
-                color: '#fff',
-            },
             data: ['礼物']
         },
         grid: {
@@ -932,27 +626,14 @@ function onedayTopUserGift(data) {
         },
         xAxis: {
             type: 'value',
-            axisTick: {show: false},
-            axisLine: {
-                show: false,
-                lineStyle: {
-                    color: '#fff',
-                }
-            },
+
             splitLine: {
-                show: false
+                show: true
             },
         },
         yAxis: [
             {
                 type: 'category',
-                axisTick: {show: false},
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#fff',
-                    }
-                },
                 data: data.user
             },
 
@@ -986,17 +667,20 @@ function onedayTopUserGift(data) {
     }
 }
 
-function onedayTopUserExpence(data) {
+function drawTopUserByExpense(data) {
     var myChart = echarts.init(document.getElementById('rightGraph1'));
     var option = {
-        backgroundColor: '#0E2A43',
-        legend: {
-            bottom: 20,
-            textStyle: {
-                color: '#fff',
-            },
-            data: ['花费']
+        toolbox: {
+            feature: {
+                restore: {},
+                saveAsImage: {}
+            }
         },
+        title: {
+            text: '用户花费排行榜',
+            left: 'center'
+        },
+        backgroundColor: '#ffffff',
         grid: {
             left: '3%',
             right: '4%',
@@ -1013,28 +697,25 @@ function onedayTopUserExpence(data) {
         },
         xAxis: {
             type: 'value',
-            axisTick: {show: false},
-            axisLine: {
-                show: false,
-                lineStyle: {
-                    color: '#fff',
-                }
-            },
             splitLine: {
+                show: true
+            },
+            axisLabel: { //坐标轴刻度标签的相关设置。
+                interval: 1,//设置为 1，表示『隔一个标签显示一个标签』
+                textStyle: {
+                    fontStyle: 'normal',
+                    fontFamily: '微软雅黑',
+                    fontSize: 12,
+                },
                 show: false
             },
         },
         yAxis: [
             {
                 type: 'category',
-                axisTick: {show: false},
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#fff',
-                    }
-                },
-                data: data.user
+
+                data: data.user,
+
             },
 
         ],
@@ -1067,13 +748,18 @@ function onedayTopUserExpence(data) {
     }
 }
 
-function onedayTopCate(data) {
+function drawTopCate(data) {
     var myChart = echarts.init(document.getElementById('leftGraph'));
     var option = {
+        toolbox: {
+            feature: {
+                restore: {},
+                saveAsImage: {}
+            }
+        },
         "title": {
             "text": "最受欢迎类别排行榜",
             "textStyle": {
-                "color": "#bcbfff",
                 "fontWeight": "bold",
                 "fontSize": 14
             },
@@ -1094,7 +780,7 @@ function onedayTopCate(data) {
         },
         "yAxis": [{
             "type": "category",
-            "data": ["TOP10", "TOP9", "TOP8", "TOP7", "TOP6", "TOP5", "TOP4", "TOP3", "TOP2", "TOP1"],
+            "data": data.map(c => c["cate"]),
             "axisLine": {
                 "show": false
             },
@@ -1104,7 +790,7 @@ function onedayTopCate(data) {
             },
             "axisLabel": {
                 "textStyle": {
-                    "color": "#ffb069"
+                    "color": "gray"
                 }
             }
         }],
@@ -1129,18 +815,6 @@ function onedayTopCate(data) {
             "type": "bar",
             "data": data,
             "barCategoryGap": "35%",
-            "label": {
-                "normal": {
-                    "show": true,
-                    "position": "right",
-                    "formatter": function (params) {
-                        return params.data.cate;
-                    },
-                    "textStyle": {
-                        "color": "#bcbfff" //color of value
-                    }
-                }
-            },
             "itemStyle": {
                 "normal": {
                     "color": new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
