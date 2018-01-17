@@ -6,13 +6,27 @@ from etl.warehouse.models import Date, Hour, User
 
 
 def gen_date(insert=False):
-    start = datetime.datetime(2017, 11, 1)
+    start = datetime.datetime(2017, 11, 1)  # fuuuuuuuuck!
     end = datetime.datetime(2020, 1, 1)
 
     dates = {}
 
     dt = start
     key = 1
+    while dt <= end:
+        if insert:
+            Date.create(date=dt, year=dt.year, month=dt.month, day=dt.day, weekday=dt.isoweekday())
+
+        dates[dt.strftime("%Y_%m_%d")] = key
+
+        key += 1
+        dt += datetime.timedelta(days=1)
+
+    start = datetime.datetime(2017, 10, 1)  # fuuuuuuuuck!
+    end = datetime.datetime(2017, 10, 31)
+
+    dt = start
+    key = len(dates)
     while dt <= end:
         if insert:
             Date.create(date=dt, year=dt.year, month=dt.month, day=dt.day, weekday=dt.isoweekday())

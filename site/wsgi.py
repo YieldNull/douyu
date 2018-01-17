@@ -498,7 +498,7 @@ def api_stat_weekly_hourly(date):
     query = SiteHourlyStat.select() \
         .join(Date, on=(SiteHourlyStat.date == Date.date_key)) \
         .where((Date.date <= date) & (Date.date >= date - timedelta(days=6))) \
-        .order_by(SiteHourlyStat.date)
+        .order_by(Date.date)
 
     days = {}
     for row in query:
