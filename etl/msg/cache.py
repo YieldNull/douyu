@@ -7,7 +7,7 @@ class RedisClient(object):
 
     def __init__(self, file_prefix):
         self.client = redis.StrictRedis()
-        self.fd_user = open(file_prefix + '_new_user.txt', 'w', encoding='utf-8')
+        self.fd_user = open(file_prefix + '_new_user.txt', 'a', encoding='utf-8')
 
     def close(self):
         self.fd_user.close()
@@ -37,7 +37,8 @@ class RedisClient(object):
                                    lambda v: v.decode('utf-8'))
 
     def get_gift_normal(self, name):
-        return self.client.get('gn:{}'.format(name)).decode('utf-8')
+        r = self.client.get('gn:{}'.format(name))
+        return r.decode('utf-8') if r is not None else None
 
     def save_gift_super(self, name):
         key = 'gs:{}'.format(name)
@@ -48,7 +49,8 @@ class RedisClient(object):
                                    lambda v: v.decode('utf-8'))
 
     def get_gift_super(self, name):
-        return self.client.get('gs:{}'.format(name)).decode('utf-8')
+        r = self.client.get('gs:{}'.format(name))
+        return r.decode('utf-8') if r is not None else None
 
     def save_gift_u2u(self, name):
         key = 'gu:{}'.format(name)
@@ -59,7 +61,8 @@ class RedisClient(object):
                                    lambda v: v.decode('utf-8'))
 
     def get_gift_u2u(self, name):
-        return self.client.get('gu:{}'.format(name)).decode('utf-8')
+        r = self.client.get('gu:{}'.format(name))
+        return r.decode('utf-8') if r is not None else None
 
     def _incr_user_id(self):
         return self.client.incr('uid')
