@@ -47,10 +47,19 @@ def gen_hour():
 def store_user():
     client = redis.StrictRedis(decode_responses=True)
 
+    counter = 0
     for key in client.scan_iter(match='u:*'):
         user_id, level = pickle.loads(client.get(key))
 
-        User.create(user_key=user_id, user_id=user_id, name=key[2:], level=level)
+        # User.get(user_key=user_id, user_id=user_id, name=key[2:], level=level)
+        u, is_new = User.get_or_create(user_key=user_id, defaults={'user_id': user_id, 'name': key[2:], 'level': level})
+
+        if is_new:
+            print(u.user_id, u.name, u.level)
+
+        counter += 1
+        if counter % 1000 == 0:
+            print('counter', counter)
 
 
 def store_gift(path):
@@ -118,6 +127,7 @@ def store_gift(path):
 
 if __name__ == '__main__':
     # store_user()
-    gen_date(insert=True)
-    gen_hour()
+    # gen_date(insert=True)
+    # gen_hour()
     # store_gift('gift_price.csv')
+    pass

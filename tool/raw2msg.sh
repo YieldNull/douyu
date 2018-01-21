@@ -34,7 +34,7 @@ while read -u 10 url; do
     name="${bz%.*}"
 
     echo "splitting $name"
-    split -l 10000 $name "$dest/splits/${name%.*}" &
+    split -l 100000 $name "$dest/splits/${name%.*}" &
 
 done 10<"$urls"
 

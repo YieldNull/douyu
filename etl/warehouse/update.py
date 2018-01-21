@@ -22,7 +22,7 @@ def update_user(path):
 
             User.create(user_key=uid, user_id=uid, name=name, level=level)
         except Exception:
-            logger.exception('path:{} index:{} uid:{} name:{} level:{}'.format(path, index, uid, name, level))
+            logger.warning('path:{} index:{} uid:{} name:{} level:{}'.format(path, index, uid, name, level))
 
 
 def update_gift(path):
@@ -35,6 +35,6 @@ def update_gift(path):
 if __name__ == '__main__':
     import sys
 
-    update_gift(sys.argv[1])
+    # update_gift(sys.argv[1])
 
     update_user(sys.argv[2])

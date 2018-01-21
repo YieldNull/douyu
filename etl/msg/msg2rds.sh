@@ -15,7 +15,7 @@ do
     echo "${repo}/${date}_${type}.txt"
 
     mkdir "$dest/splits"
-    split -a 4 -l 20000 "${repo}/${date}_${type}.txt" "$dest/splits/${type}_${date}"
+    split -a 4 -l 50000 "${repo}/${date}_${type}.txt" "$dest/splits/${type}_${date}"
     python3 "$dir/msg2rds.py" "$dest/splits" "$dest/results-tmp" "${type}"
     rm -rf "$dest/splits"
 done

@@ -70,7 +70,7 @@ class RDS(object):
                                                 date_key=date_key,
                                                 dcount=dcount, gcount=gcount, expense=expense, ttype=ttype)
                 except Exception:
-                    self.logger.exception('{} index:{} {}'.format(fname, index, repr(row)))
+                    self.logger.warning('{} index:{} {}'.format(fname, index, repr(row)))
 
     def _store_stat(self, is_site, is_daily):
         date_str = self.date.strftime("%Y_%m_%d")
@@ -128,12 +128,11 @@ class RDS(object):
                                               ucount=ucount, ducount=ducount, gucount=gucount,
                                               dcount=dcount, gcount=gcount, income=income)
             except Exception:
-                self.logger.exception('{} index:{} {}'.format(fname, index, repr(row)))
+                self.logger.warning('{} index:{} {}'.format(fname, index, repr(row)))
 
 
 if __name__ == '__main__':
     import sys
 
-    print("Parsing %s" % sys.argv[2])
     rds = RDS(sys.argv[1], datetime.datetime.strptime(sys.argv[2], "%Y_%m_%d"))
     rds.store()
