@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from common.parser import RegexParser, parse_raw
 from etl.msg.storage import TextStorage
@@ -29,8 +30,8 @@ if __name__ == '__main__':
     dir_ = sys.argv[1]
     repository = sys.argv[2]
 
-    process_max_workers = sys.argv[3] if len(sys.argv) > 3 else 8
-    thread_max_workers = sys.argv[4] if len(sys.argv) > 4 else 40
+    process_max_workers = sys.argv[3] if len(sys.argv) > 3 else multiprocessing.cpu_count()
+    thread_max_workers = sys.argv[4] if len(sys.argv) > 4 else 20
 
     start = time.time()
     executor = ProcessPoolExecutor(max_workers=process_max_workers)

@@ -11,12 +11,39 @@ mkdir "$dest/splits"
 mkdir "$dest/results-tmp"
 
 while read -u 10 url; do
-    echo $url
-    wget -q $url
+    echo "downloading $url"
+    wget -q $url &
+done 10<"$urls"
+
+wait
+echo "finish downloading"
+
+while read -u 10 url; do
     bz=`basename $url`
-    tar xvf $bz --strip-components=3
+
+    echo "extracting $bz"
+    tar xvf $bz --strip-components=3 &
+
+done 10<"$urls"
+
+wait
+echo "finish extracting"
+
+while read -u 10 url; do
+    bz=`basename $url`
     name="${bz%.*}"
-    split -l 10000 $name "$dest/splits/${name%.*}"
+
+    echo "splitting $name"
+    split -a 4 -l 100000 $name "$dest/splits/${name%.*}" &
+
+done 10<"$urls"
+
+wait
+echo "finish splitting"
+
+while read -u 10 url; do
+    bz=`basename $url`
+    name="${bz%.*}"
 
     rm $bz
     rm $name
