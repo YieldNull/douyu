@@ -10,3 +10,4 @@ scrapy
 scrapy-random-useragent
 pandas
 simplejson
+aliyun-python-sdk-ecs
