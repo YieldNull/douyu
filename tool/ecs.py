@@ -22,4 +22,9 @@ def stop():
 
 
 if __name__ == '__main__':
-    stop()
+    import sys
+
+    if sys.argv[1] == 'stop':
+        stop()
+    elif sys.argv[1] == 'start':
+        start()
