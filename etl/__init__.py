@@ -13,5 +13,5 @@ class BaseModel(Model):
         database = db
 
 
-def get_logger(name):
-    return common.get_logger(name, file_name=conf.LOGGING_FILE_NAME)
+def get_logger(name, file_name=conf.LOGGING_FILE_NAME):
+    return common.get_logger(name, file_name=file_name)
