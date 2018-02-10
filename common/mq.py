@@ -2,6 +2,7 @@ import pika
 import json
 import logging
 from common.parser import RegexParser
+from pika.exceptions import ConnectionClosed
 
 
 class RawProducer(object):
@@ -19,19 +20,23 @@ class RawProducer(object):
         self.connect()
 
     def connect(self):
-        self.conn = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
-        self.channel = self.conn.channel()
+        try:
+            self.conn = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
+            self.channel = self.conn.channel()
 
-        self.channel.exchange_declare(exchange=self.EXCHANGE, exchange_type='direct')
-        self.channel.queue_declare(queue=self.QUEUE_NAME)
+            self.channel.exchange_declare(exchange=self.EXCHANGE, exchange_type='direct')
+            self.channel.queue_declare(queue=self.QUEUE_NAME)
 
-        self.channel.queue_bind(exchange=self.EXCHANGE,
-                                queue=self.QUEUE_NAME,
-                                routing_key=self.ROUTE_PARSER)
+            self.channel.queue_bind(exchange=self.EXCHANGE,
+                                    queue=self.QUEUE_NAME,
+                                    routing_key=self.ROUTE_PARSER)
+        except ConnectionClosed:
+            self.channel = None
 
     def send(self, msg):
         try:
-            self.channel.basic_publish(exchange=self.EXCHANGE, routing_key=self.ROUTE_PARSER, body=msg)
+            if self.channel is not None:
+                self.channel.basic_publish(exchange=self.EXCHANGE, routing_key=self.ROUTE_PARSER, body=msg)
         except Exception as e:
             self.logger.warning('Error in publish RawProducer msg. Reconnecting... %s' % (repr(e)))
             self.close()
