@@ -13,7 +13,7 @@
     </div>
 
     <div class="ui centered grid">
-        <div class="column video" >
+        <div class="column video">
             <canvas id="canvasBarrage">
             </canvas>
             <video id="videoElement" class="centeredVideo" height="625" autoplay>
@@ -265,32 +265,45 @@
                 var doc = JSON.parse(m.body);
                 if (doc.type === 'chatmsg') {
 
-                    {#console.log(doc['emotValue']+doc['content']);#}
-                    var tmp1 = {
-                        value: doc.content,
-                        time: eleVideo.currentTime,
-                        range: [0, 0.5],
-                        color:'#FFF',
-                        // 其它如color, fontSize, opacity等可选
-                    }
-                    var tmp2 = {
-                        value: doc.content,
-                        time: eleVideo.currentTime,
-                        range: [0.5, 1],
-                        color:'#FFF',
-                        // 其它如color, fontSize, opacity等可选
-                    }
-                    switch (flag) {
-                        case true:
-                            console.log(tmp1);
-                            demoBarrage.add(tmp1);
-                            flag = false
-                            break;
-                        case false:
-                            console.log(tmp2);
-                            demoBarrage.add(tmp2);
-                            flag = true
-                            break;
+                    if (Math.ceil(Math.random() * 10) % 3 === 0) {
+
+                        var color = '#FFF';
+                        var polarity = doc['emotPolarity'];
+
+                        if(polarity < 0) {
+                            color = '#F00';
+                        } else if (polarity > 0 ) {
+                            color = '#0F0';
+                        }
+
+
+                        {#console.log(doc['emotValue']+doc['content']);#}
+                        var tmp1 = {
+                            value: doc.content,
+                            time: eleVideo.currentTime,
+                            range: [0, 0.5],
+                            color: color,
+                            // 其它如color, fontSize, opacity等可选
+                        }
+                        var tmp2 = {
+                            value: doc.content,
+                            time: eleVideo.currentTime,
+                            range: [0.5, 1],
+                            color: '#FFF',
+                            // 其它如color, fontSize, opacity等可选
+                        }
+                        switch (flag) {
+                            case true:
+                                console.log(tmp1);
+                                demoBarrage.add(tmp1);
+                                flag = false
+                                break;
+                            case false:
+                                console.log(tmp2);
+                                demoBarrage.add(tmp2);
+                                flag = true
+                                break;
+                        }
                     }
                 }
             });
