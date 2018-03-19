@@ -6,7 +6,7 @@ import threading
 
 import time
 
-from common.mq import ParserConsumer, StreamProducer
+from common.mq import ParserConsumer, StreamProducer, EmotProducer
 from common.parser import MsgCsvStorage
 from live import get_logger
 
@@ -14,7 +14,7 @@ from live import get_logger
 class Consumer(object):
 
     def __init__(self, repo):
-        self.producer = StreamProducer(get_logger('StreamProducer'))
+        self.producer = EmotProducer(get_logger('EmotProducer'))
 
         self.date = time.strftime('%Y_%m_%d')
 
@@ -34,7 +34,7 @@ class Consumer(object):
 
         self.jobs.put(msg)
 
-        self.producer.send(StreamProducer.ROUTE_STREAM + msg['roomID'], json.dumps(msg))
+        self.producer.send(json.dumps(msg))
 
     def _handler_thread(self):
         while True:

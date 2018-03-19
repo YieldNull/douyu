@@ -50,6 +50,51 @@ class RawProducer(object):
                 self.logger.warning('Error in closing RawProducer connection %s' % (repr(e)))
 
 
+class EmotProducer(object):
+    EXCHANGE = 'danmu.emot'
+    QUEUE_NAME = 'danmu.queue.emot'
+    ROUTE_PARSER = 'parser'
+
+    def __init__(self, logger: logging.Logger, host='localhost', port=5672):
+        self.host = host
+        self.port = port
+        self.logger = logger
+        self.conn = None
+        self.channel = None
+
+        self.connect()
+
+    def connect(self):
+        try:
+            self.conn = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
+            self.channel = self.conn.channel()
+
+            self.channel.exchange_declare(exchange=self.EXCHANGE, exchange_type='direct')
+            self.channel.queue_declare(queue=self.QUEUE_NAME)
+
+            self.channel.queue_bind(exchange=self.EXCHANGE,
+                                    queue=self.QUEUE_NAME,
+                                    routing_key=self.ROUTE_PARSER)
+        except ConnectionClosed:
+            self.channel = None
+
+    def send(self, msg):
+        try:
+            if self.channel is not None:
+                self.channel.basic_publish(exchange=self.EXCHANGE, routing_key=self.ROUTE_PARSER, body=msg)
+        except Exception as e:
+            self.logger.warning('Error in publish EmotProducer msg. Reconnecting... %s' % (repr(e)))
+            self.close()
+            self.connect()
+
+    def close(self):
+        if self.conn is not None:
+            try:
+                self.conn.close()
+            except Exception as e:
+                self.logger.warning('Error in closing EmotProducer connection %s' % (repr(e)))
+
+
 class StreamProducer(object):
     EXCHANGE = 'amq.topic'  # use build-in exchange for Web STOMP
 

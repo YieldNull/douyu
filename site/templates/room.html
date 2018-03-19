@@ -265,7 +265,7 @@
                 var doc = JSON.parse(m.body);
                 if (doc.type === 'chatmsg') {
 
-                    {#console.log(doc);#}
+                    {#console.log(doc['emotValue']+doc['content']);#}
                     var tmp1 = {
                         value: doc.content,
                         time: eleVideo.currentTime,
