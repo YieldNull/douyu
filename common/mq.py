@@ -191,3 +191,38 @@ class ParserConsumer(object):
                     self.msg_handler(msg)
         except Exception as e:
             self.logger.warning('Error in ParserConsumer %s' % (repr(e)))
+
+
+class LiveAccProducer(object):
+    EXCHANGE = 'amq.topic'  # use build-in exchange for Web STOMP
+
+    ROUTE_STREAM = 'acc.room'
+
+    def __init__(self, logger: logging.Logger, host='localhost', port=5672):
+        self.host = host
+        self.port = port
+        self.logger = logger
+        self.conn = None
+        self.channel = None
+
+        self.connect()
+
+    def connect(self):
+        self.conn = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
+        self.channel = self.conn.channel()
+
+    def send(self, room, msg):
+        try:
+            self.channel.basic_publish(exchange=self.EXCHANGE,
+                                       routing_key='{:s}.{:s}'.format(self.ROUTE_STREAM, room), body=msg)
+        except Exception as e:
+            self.logger.warning('Error in publish LiveAccProducer msg. Reconnecting... %s' % (repr(e)))
+            self.close()
+            self.connect()
+
+    def close(self):
+        if self.conn is not None:
+            try:
+                self.conn.close()
+            except Exception as e:
+                self.logger.warning('Error in closing LiveAccProducer connection %s' % (repr(e)))

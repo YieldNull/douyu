@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
     <div class="ui two column centered grid">
         <div class="four column centered row">
             <div class="column">
@@ -22,34 +23,36 @@
         </div>
     </div>
 
-    <div class="ui two column centered grid">
-        <div class="six wide centered column">
-            <div class="ui raised segment">
-                <a class="ui red ribbon label">实时用户数</a>
-                <p>Account Details</p>
-                <a class="ui blue ribbon label">实时单弹幕数</a>
-                <p>Account Details</p>
-                <a class="ui teal ribbon label">实时收入</a>
-                <p>Account Details</p>
-            </div>
-        </div>
-        <div class="six wide centered column">
-            <div class="ui segment">
-                <a class="ui orange right ribbon label">实时热词</a>
-                <p>Account Details</p>
-                <p>Account Details</p>
-                <p>Account Details</p>
-                <p>Account Details</p>
-                <p>Account Details</p>
-            </div>
-        </div>
-    </div>
+    {#    <div class="ui two column centered grid">#}
+    {#        <div class="six wide centered column">#}
+    {#            <div class="ui raised segment">#}
+    {#                <a class="ui red ribbon label">实时用户数</a>#}
+    {#                <p>Account Details</p>#}
+    {#                <a class="ui blue ribbon label">实时单弹幕数</a>#}
+    {#                <p>Account Details</p>#}
+    {#                <a class="ui teal ribbon label">实时收入</a>#}
+    {#                <p>Account Details</p>#}
+    {#            </div>#}
+    {#        </div>#}
+    {#        <div class="six wide centered column">#}
+    {#            <div class="ui segment">#}
+    {#                <a class="ui orange right ribbon label">实时热词</a>#}
+    {#                <p>Account Details</p>#}
+    {#                <p>Account Details</p>#}
+    {#                <p>Account Details</p>#}
+    {#                <p>Account Details</p>#}
+    {#                <p>Account Details</p>#}
+    {#            </div>#}
+    {#        </div>#}
+    {#    </div>#}
 
+    <div class="ui centered grid">
+        <div id="myChart" style="width: 800px; height: 200px"></div>
+    </div>
 {% endblock %}
 
 
 {% block script %}
-
     <script src="{{ url_for('static',filename='js/flv.min.js') }}"></script>
     <script src="{{ url_for('static',filename='js/stomp.min.js') }}"></script>
     <script>
@@ -270,9 +273,9 @@
                         var color = '#FFF';
                         var polarity = doc['emotPolarity'];
 
-                        if(polarity < 0) {
+                        if (polarity < 0) {
                             color = '#F00';
-                        } else if (polarity > 0 ) {
+                        } else if (polarity > 0) {
                             color = '#0F0';
                         }
 
@@ -294,12 +297,12 @@
                         }
                         switch (flag) {
                             case true:
-                                console.log(tmp1);
+                            {#console.log(tmp1);#}
                                 demoBarrage.add(tmp1);
                                 flag = false
                                 break;
                             case false:
-                                console.log(tmp2);
+                            {#console.log(tmp2);#}
                                 demoBarrage.add(tmp2);
                                 flag = true
                                 break;
@@ -326,6 +329,64 @@
         }, 10 * 1000); // 保持弹幕爬虫持续开启
 
     </script>
+
+
+    <script src="{{ url_for('static', filename='epoch/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='epoch/epoch.js') }}"></script>
+
+    <script>
+        function showLiveAcc() {
+            var myChart = undefined;
+
+            var ws = new WebSocket("ws://" + window.location.hostname + ":15674/ws");
+            var client = Stomp.over(ws);
+
+            client.debug = function (m) {
+
+            };
+            var on_connect = function (x) {
+                var id = client.subscribe("/topic/acc.room.{{ rid }}", function (m) {
+                    var doc = JSON.parse(m.body);
+
+                    var data = [{
+                        label: 'user',
+                        values: [{
+                            time: doc['time'],
+                            y: doc['user']
+                        }]
+                    }, {
+                        label: 'gift',
+                        values: [{
+                            time: doc['time'],
+                            y: doc['gift']
+                        }]
+                    }, {
+                        label: 'danmu',
+                        values: [{
+                            time: doc['time'],
+                            y: doc['danmu']
+                        }]
+                    },];
+
+                    console.log(data);
+
+                    if (myChart === undefined) {
+                        myChart = $('#myChart').epoch({type: 'time.area', data: data});
+                    } else {
+                        myChart.push(data);
+                    }
+                });
+            };
+
+            var on_error = function () {
+                console.log('error');
+            };
+
+            client.connect('guest', 'guest', on_connect, on_error, '/');
+        }
+
+        showLiveAcc();
+    </script>
 {% endblock %}
 
 
@@ -344,4 +405,7 @@
             left: 17%;
         }
     </style>
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='epoch/epoch.min.css') }}">
+
 {% endblock %}
