@@ -63,10 +63,6 @@ class AccManager(object):
 
                 self.producer.send(room, json.dumps(msg))
 
-                if room == '288016':
-                    print('Room:{:s} User:{:d} Danmu:{:d} Gift:{:d} Income:{:d}'.format(
-                        room, users, danmu, gift, income))
-
         def run_threaded(job_func):
             job_thread = threading.Thread(target=job_func)
             job_thread.start()
@@ -124,7 +120,7 @@ if __name__ == '__main__':
     import sys
 
     acc_manager = AccManager(settings.GIFT_PATH)
-    acc_manager.scheduled(1)
+    acc_manager.scheduled(2)
 
     consumer = Consumer(sys.argv[1], acc_manager)
 

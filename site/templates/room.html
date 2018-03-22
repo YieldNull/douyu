@@ -2,13 +2,19 @@
 
 {% block content %}
 
-    <div class="ui two column centered grid">
+    <div class="ui centered grid">
         <div class="four column centered row">
-            <div class="column">
-                <a class="ui red tag label" style="width:50%">RoomID:{{ rid }}</a>
+            <div class="four wide column">
+                <a class="ui red tag label" style="text-overflow: ellipsis">{{ name }}</a>
             </div>
-            <div class="column">
-                <a class="ui teal tag label" style="width:50%">Rand:23/666</a>
+            <div class="four wide column">
+                <a class="ui teal tag label">实时用户数:<span id="userCount">0</span></a>
+            </div>
+            <div class="four wide column">
+                <a class="ui teal tag label">实时弹幕数:<span id="danmuCount">0</span></a>
+            </div>
+            <div class="four wide column">
+                <a class="ui teal tag label">实时礼物数:<span id="giftCount">0</span></a>
             </div>
         </div>
     </div>
@@ -331,13 +337,8 @@
     </script>
 
 
-    <script src="{{ url_for('static', filename='epoch/d3.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='epoch/epoch.js') }}"></script>
-
     <script>
         function showLiveAcc() {
-            var myChart = undefined;
-
             var ws = new WebSocket("ws://" + window.location.hostname + ":15674/ws");
             var client = Stomp.over(ws);
 
@@ -348,33 +349,9 @@
                 var id = client.subscribe("/topic/acc.room.{{ rid }}", function (m) {
                     var doc = JSON.parse(m.body);
 
-                    var data = [{
-                        label: 'user',
-                        values: [{
-                            time: doc['time'],
-                            y: doc['user']
-                        }]
-                    }, {
-                        label: 'gift',
-                        values: [{
-                            time: doc['time'],
-                            y: doc['gift']
-                        }]
-                    }, {
-                        label: 'danmu',
-                        values: [{
-                            time: doc['time'],
-                            y: doc['danmu']
-                        }]
-                    },];
-
-                    console.log(data);
-
-                    if (myChart === undefined) {
-                        myChart = $('#myChart').epoch({type: 'time.area', data: data});
-                    } else {
-                        myChart.push(data);
-                    }
+                    $("#danmuCount").text(doc.danmu);
+                    $("#userCount").text(doc.user);
+                    $("#giftCount").text(doc.gift);
                 });
             };
 
@@ -387,6 +364,7 @@
 
         showLiveAcc();
     </script>
+
 {% endblock %}
 
 
@@ -405,7 +383,5 @@
             left: 17%;
         }
     </style>
-
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='epoch/epoch.min.css') }}">
 
 {% endblock %}

@@ -24,12 +24,12 @@ def home():
 
 @app.route('/room/<string:rid>')
 def live(rid):
-    c = mongo_db['room'].find({'rid': rid, 'isOnline': True}).count()
-    if c == 0:
+    room = mongo_db['room'].find_one({'rid': rid, 'isOnline': True})
+    if room is None:
         abort(404)
 
     redis_client.publish_temporary_rid(rid)
-    return render_template('room.html', rid=rid)
+    return render_template('room.html', rid=room['rid'], name=room['roomName'])
 
 
 @app.route('/cate/')
