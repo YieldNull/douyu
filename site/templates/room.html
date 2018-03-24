@@ -7,9 +7,9 @@
             <div class="four wide column">
                 <a class="ui red tag label" style="text-overflow: ellipsis">{{ name }}</a>
             </div>
-            <div class="four wide column">
-                <a class="ui teal tag label">实时用户数:<span id="userCount">0</span></a>
-            </div>
+{#            <div class="four wide column">#}
+{#                <a class="ui teal tag label">实时用户数:<span id="userCount">0</span></a>#}
+{#            </div>#}
             <div class="four wide column">
                 <a class="ui teal tag label">实时弹幕数:<span id="danmuCount">0</span></a>
             </div>
@@ -350,7 +350,7 @@
                     var doc = JSON.parse(m.body);
 
                     $("#danmuCount").text(doc.danmu);
-                    $("#userCount").text(doc.user);
+                    {#$("#userCount").text(doc.user);#}
                     $("#giftCount").text(doc.gift);
                 });
             };

@@ -56,6 +56,11 @@ def totalStatistics():
     return render_template('statistics.html')
 
 
+@app.route('/compare')
+def compare():
+    return render_template('compare.html')
+
+
 @app.route('/api/live/<int:page>')
 def api_live(page):
     count = mongo_db['room'].find({'isOnline': True}).count()
