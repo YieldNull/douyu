@@ -45,20 +45,42 @@ def gen_hour():
 
 
 def store_user():
+    from bitarray import bitarray
+
+    def gen_map():
+        cnt = 0
+
+        arr = bitarray(30000000)
+        arr.setall(False)
+
+        paginate_by = 10000
+        amount = User.select().count()
+        offset = 0
+        while cnt < amount:
+            for user in User.select().where(User.user_key > offset).order_by(User.user_key).limit(paginate_by):
+                arr[user.user_key] = True
+                offset = user.user_key
+                cnt += 1
+                if cnt % 10000 == 0:
+                    print('counter:offset {:d}:{:d}'.format(cnt, offset))
+        print(offset)
+        return arr
+
     client = redis.StrictRedis(decode_responses=True)
 
     counter = 0
+    bitmap = gen_map()
+
     for key in client.scan_iter(match='u:*'):
         user_id, level = pickle.loads(client.get(key))
 
-        # User.get(user_key=user_id, user_id=user_id, name=key[2:], level=level)
-        u, is_new = User.get_or_create(user_key=user_id, defaults={'user_id': user_id, 'name': key[2:], 'level': level})
+        if bitmap[user_id] is False:
+            u = User.create(user_key=user_id, user_id=user_id, name=key[2:], level=level)
 
-        if is_new:
             print(u.user_id, u.name, u.level)
 
         counter += 1
-        if counter % 1000 == 0:
+        if counter % 10000 == 0:
             print('counter', counter)
 
 

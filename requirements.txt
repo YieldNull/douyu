@@ -12,3 +12,4 @@ pandas
 simplejson
 aliyun-python-sdk-ecs
 schedule
+bitarray
