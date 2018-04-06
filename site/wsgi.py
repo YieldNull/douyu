@@ -10,6 +10,7 @@ from peewee import fn, SQL, JOIN
 from settings import MONGO_DATABASE, MONGO_URI, PAGINATE_BY
 from common.ws import RedisClient
 from etl.warehouse.models import *
+from recommend import Recommend
 
 app = Flask(__name__)
 
@@ -564,6 +565,43 @@ def api_stat_site_cate_daily(date):
         })
 
     return jsonify({'code': 0, 'msg': 'success', 'data': payload})
+
+
+@app.route('/api/recommend/<int:rid>')
+def api_recommend(rid):
+    limit = 8
+    candidates = {}
+
+    for r in RoomUsers.select():
+        candidates[str(r.room.room_key)] = {}
+        candidates[str(r.room.room_key)]['ucount'] = r.ucount
+
+    c = 0
+    for rc in RoomCommonUsers.select().where(RoomCommonUsers.room1 == int(rid)):
+        candidates[str(rc.room2.room_key)]['common'] = rc.ucount
+        c += 1
+
+    if c > 0:
+        rmd = Recommend(str(rid), candidates)
+        result = rmd.get_result()
+    else:
+        r = mongo_db['room'].find_one({'rid': str(rid)})
+        if r is not None:
+            js = api_cate_room(r['cid'], page=1)
+            js['data'] = js['data'][:limit]
+            return js
+        else:
+            return jsonify({'code': 1, 'msg': 'invalid request'})
+
+    meta = []
+    for doc in mongo_db['room'].find({'isOnline': True, 'rid': {'$in': result}}).limit(limit):
+        doc.pop('_id')
+        doc.pop('isOnline')
+        doc['roomUrl'] = url_for('live', rid=doc['rid'])
+        doc['cateUrl'] = '/cate/%s' % doc['cid']
+        meta.append(doc)
+
+    return jsonify({'code': 0, 'msg': 'success', 'data': meta})
 
 
 if __name__ == '__main__':

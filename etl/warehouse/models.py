@@ -147,7 +147,26 @@ class SiteDailyStat(BaseModel):
         db_table = 'dw_fact_site_daily'
 
 
+class RoomUsers(BaseModel):
+    room = ForeignKeyField(Room, to_field=Room.room_key, db_column='room_key', primary_key=True)
+    ucount = IntegerField()
+
+    class Meta:
+        db_table = 'room_users'
+
+
+class RoomCommonUsers(BaseModel):
+    room1 = ForeignKeyField(Room, to_field=Room.room_key, db_column='room1_key', related_name='rc1')
+    room2 = ForeignKeyField(Room, to_field=Room.room_key, db_column='room2_key', related_name='rc2')
+    ucount = IntegerField()
+
+    class Meta:
+        db_table = 'room_common_users'
+        primary_key = CompositeKey('room1', 'room2')
+
+
 if __name__ == '__main__':
     db.create_tables([User, Hour, Date, Room, RoomCate, RoomCateMap,
                       RoomDailyTopUser, SiteDailyTopUser,
-                      RoomHourlyStat, RoomDailyStat, SiteHourlyStat, SiteDailyStat], safe=True)
+                      RoomHourlyStat, RoomDailyStat, SiteHourlyStat, SiteDailyStat,
+                      RoomUsers, RoomCommonUsers], safe=True)
