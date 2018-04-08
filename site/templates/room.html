@@ -51,17 +51,21 @@
     {#            </div>#}
     {#        </div>#}
     {#    </div>#}
+
     <div>
         <div class="ui stackable centered five column grid">
         </div>
     </div>
 
+    <div id="chartContainer" style="height: 300px; width: 100%;">
+    </div>
 {% endblock %}
 
 
 {% block script %}
     <script src="{{ url_for('static',filename='js/flv.min.js') }}"></script>
     <script src="{{ url_for('static',filename='js/stomp.min.js') }}"></script>
+
     <script>
         $(function () {
             $.getJSON("/api/stream/{{ rid }}", function (data) {
@@ -338,7 +342,74 @@
     </script>
 
 
-    <script>
+    <script type="text/javascript">
+        var chartDanmu = [];
+        var chartGift = [];
+        var chartUser = [];
+        var X_LIMIT = 30;
+
+        var chart;
+
+        window.onload = function () {
+
+            var now = Date.now();
+            var c = 30;
+            while (c > 0) {
+                chartDanmu.push({
+                    x: new Date(now - c * 2 * 1000),
+                });
+                chartGift.push({
+                    x: new Date(now - c * 2 * 1000),
+                });
+                chartUser.push({
+                    x: new Date(now - c * 2 * 1000),
+                });
+                c--;
+            }
+
+            chart = new CanvasJS.Chart("chartContainer", {
+                animationEnabled: true,
+                theme: 'light2',
+                title: {
+                    {#text: "直播间实时数据"#}
+                },
+                axisX: {
+                    valueFormatString: "mm:ss"
+                },
+                axisY: {
+                    includeZero: false
+                },
+                legend: {
+                    cursor: "pointer",
+                    fontSize: 16,
+                },
+                toolTip: {
+                    shared: true
+                },
+                data: [{
+                    name: "弹幕数",
+                    type: "spline",
+                    markerSize: 0,
+                    showInLegend: true,
+                    dataPoints: chartDanmu
+                }, {
+                    name: "礼物数",
+                    type: "spline",
+                    markerSize: 0,
+                    showInLegend: true,
+                    dataPoints: chartGift
+                }, {
+                    name: "用户数",
+                    type: "spline",
+                    markerSize: 0,
+                    showInLegend: true,
+                    dataPoints: chartUser
+                }]
+            });
+
+            showLiveAcc();
+        };
+
         function showLiveAcc() {
             var ws = new WebSocket("ws://" + window.location.hostname + ":15674/ws");
             var client = Stomp.over(ws);
@@ -353,6 +424,30 @@
                     $("#danmuCount").text(doc.danmu);
                     {#$("#userCount").text(doc.user);#}
                     $("#giftCount").text(doc.gift);
+
+                    chartDanmu.push({
+                        "x": new Date(doc.time * 1000),
+                        "y": doc.danmu,
+                    });
+                    chartUser.push({
+                        "x": new Date(doc.time * 1000),
+                        "y": doc.user,
+                    });
+                    chartGift.push({
+                        "x": new Date(doc.time * 1000),
+                        "y": doc.gift,
+                    });
+
+                    if (chartDanmu.length > X_LIMIT) {
+                        chartDanmu.shift();
+                    }
+                    if (chartGift.length > X_LIMIT) {
+                        chartGift.shift();
+                    }
+                    if (chartUser.length > X_LIMIT) {
+                        chartUser.shift();
+                    }
+                    chart.render();
                 });
             };
 
@@ -363,8 +458,10 @@
             client.connect('guest', 'guest', on_connect, on_error, '/');
         }
 
-        showLiveAcc();
     </script>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/canvasjs.min.js') }}"></script>
+
 
     <script>
         var page_cnt = 0;
