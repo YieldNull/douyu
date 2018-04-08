@@ -3,10 +3,10 @@ import pymongo
 import hashlib
 import time
 import requests
+import urllib.parse
 from datetime import datetime, timedelta
-from flask import Flask, render_template, jsonify, abort, url_for, request
+from flask import Flask, render_template, jsonify, abort, url_for, request, Response
 from peewee import fn, SQL, JOIN
-
 from settings import MONGO_DATABASE, MONGO_URI, PAGINATE_BY
 from common.ws import RedisClient
 from etl.warehouse.models import *
@@ -151,9 +151,26 @@ def api_stream(rid):
         return data.get('rtmp_url') + '/' + data.get('rtmp_live')
 
     try:
-        return jsonify({'code': 0, 'msg': 'success', 'url': get_url(rid)})
+        return jsonify(
+            {'code': 0, 'msg': 'success', 'url': '/api/live/streaming/?url=' + urllib.parse.quote_plus(get_url(rid))})
     except Exception as e:
         return jsonify({'code': 1, 'msg': str(e)})
+
+
+@app.route('/api/live/streaming/')
+def api_live_streaming():
+    url = request.args.get('url')
+    if url is None:
+        abort(404)
+
+    r = requests.get(urllib.parse.unquote_plus(url), stream=True)
+    headers = dict(r.headers)
+
+    def generate():
+        for chunk in r.iter_content(1024):
+            yield chunk
+
+    return Response(generate(), headers=headers)
 
 
 @app.route('/api/danmu/keepalive/<string:rid>')
