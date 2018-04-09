@@ -13,3 +13,5 @@ simplejson
 aliyun-python-sdk-ecs
 schedule
 bitarray
+gunicorn
+gevent

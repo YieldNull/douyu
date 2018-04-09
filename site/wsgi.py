@@ -1,3 +1,4 @@
+import json
 import math
 import pymongo
 import hashlib
@@ -152,7 +153,9 @@ def api_stream(rid):
 
     try:
         return jsonify(
-            {'code': 0, 'msg': 'success', 'url': '/api/live/streaming/?url=' + urllib.parse.quote_plus(get_url(rid))})
+            {'code': 0, 'msg': 'success',
+             'url': '/api/live/streaming/?url=' + urllib.parse.quote_plus(get_url(rid))
+             })
     except Exception as e:
         return jsonify({'code': 1, 'msg': str(e)})
 
@@ -163,7 +166,15 @@ def api_live_streaming():
     if url is None:
         abort(404)
 
-    r = requests.get(urllib.parse.unquote_plus(url), stream=True)
+    r = requests.get(urllib.parse.unquote_plus(url), stream=True,
+                     headers={'Referer': 'https://www.douyu.com/',
+                              'Origin': 'https://www.douyu.com/',
+                              'Pragma': 'no-cache',
+                              'Connection': 'keep-alive',
+                              'Cache-Control': 'no-cache',
+                              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) '
+                                            'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36',
+                              })
     headers = dict(r.headers)
 
     def generate():
@@ -604,9 +615,10 @@ def api_recommend(rid):
     else:
         r = mongo_db['room'].find_one({'rid': str(rid)})
         if r is not None:
-            js = api_cate_room(r['cid'], page=1)
+            js = json.loads(api_cate_room(r['cid'], page=1).data)
+
             js['data'] = js['data'][:limit]
-            return js
+            return jsonify(js)
         else:
             return jsonify({'code': 1, 'msg': 'invalid request'})
 
