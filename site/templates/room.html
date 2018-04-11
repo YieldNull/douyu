@@ -20,7 +20,7 @@
     </div>
 
     <div class="ui centered grid">
-        <div class="column video">
+        <div class="column video" >
             <canvas id="canvasBarrage">
             </canvas>
             <video id="videoElement" class="centeredVideo" height="625" autoplay>
@@ -52,13 +52,30 @@
     {#        </div>#}
     {#    </div>#}
 
-    <div>
+    <div id="chartContainer" style="height: 300px; width: 80%;margin:auto;margin-top:30px">
+    </div>
+    <div class="ui centered grid">
+        <div class="four column centered row">
+            <div class="four wide column" style="margin-top:20px">
+                <a class="ui red tag label" style="text-overflow: ellipsis">推荐直播间</a>
+            </div>
+            {#            <div class="four wide column">#}
+            {#                <a class="ui teal tag label">实时用户数:<span id="userCount">0</span></a>#}
+            {#            </div>#}
+            <div class="four wide column">
+
+            </div>
+            <div class="four wide column">
+
+            </div>
+        </div>
+    </div>
+    <div class="title-div">
         <div class="ui stackable centered five column grid">
         </div>
     </div>
 
-    <div id="chartContainer" style="height: 300px; width: 100%;">
-    </div>
+
 {% endblock %}
 
 
@@ -530,6 +547,10 @@
 {% block css %}
 
     <style>
+        .title-div{
+            padding-top:20px;
+        }
+
         .centeredVideo {
             width: 100%;
         }
