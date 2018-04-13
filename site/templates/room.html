@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 
+{% block title %}
+    {{ name }}
+{% endblock %}
+
 {% block content %}
 
     <div class="ui centered grid">
@@ -11,10 +15,10 @@
             {#                <a class="ui teal tag label">实时用户数:<span id="userCount">0</span></a>#}
             {#            </div>#}
             <div class="four wide column">
-                <a class="ui teal tag label">实时弹幕数:<span id="danmuCount">0</span></a>
+                <a class="ui teal tag label">主播：{{ anchor }}</a>
             </div>
             <div class="four wide column">
-                <a class="ui teal tag label">实时礼物数:<span id="giftCount">0</span></a>
+                <a class="ui teal tag label">在线人数：{{ online }}</a>
             </div>
         </div>
     </div>

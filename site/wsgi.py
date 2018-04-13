@@ -31,7 +31,8 @@ def live(rid):
         abort(404)
 
     redis_client.publish_temporary_rid(rid)
-    return render_template('room.html', rid=room['rid'], name=room['roomName'])
+    return render_template('room.html', rid=room['rid'], name=room['roomName'],
+                           anchor=room['nickName'], online=room['online'])
 
 
 @app.route('/cate/')
@@ -41,11 +42,11 @@ def cate_index():
 
 @app.route('/cate/<string:cid>')
 def cate_detail(cid):
-    count = mongo_db['cate'].find({'cid': cid}).count()
-    if count < 0:
+    cate = mongo_db['cate'].find_one({'cid': cid})
+    if cate is None:
         abort(404)
 
-    return render_template('cate.html', cid=cid)
+    return render_template('cate.html', cid=cid, name=cate['name'])
 
 
 @app.route('/ranking')
@@ -54,13 +55,8 @@ def ranking():
 
 
 @app.route('/totalStatistics')
-def totalStatistics():
+def statistics():
     return render_template('statistics.html')
-
-
-@app.route('/compare')
-def compare():
-    return render_template('compare.html')
 
 
 @app.route('/api/live/<int:page>')
