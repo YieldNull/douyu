@@ -16,27 +16,21 @@
 - [metaspider](metaspider) 直播间元信息
 - [site](site) Web
 
-## 设计
+## 数据量
 
-### 功能
+以阿里云`1 vCPU 1 GB (I/O优化) ecs.t5-lc1m1.small   100Mbps (峰值)`搭载`ubuntu_16_04`的服务器为例：
 
-![](doc/modules.png)
+- 接收消息峰值：2000条/s
+- 每日活跃用户：150万
+- 每日平均弹幕数：700万
+- 每日平均礼物数：900万
 
-### 数据流
+## 文档
 
-![](doc/dataflow.png)
+- [查看架构](doc/structure.md)
+- [如何运行？](doc/config.md)
+- [查看运行效果](doc/screenshots.pdf)
 
-### 爬虫
+## LICENSE
 
-![](doc/spider.png)
-
-![](doc/spider_live.png)
-
-### 实时消息
-
-![](doc/livemsg.png)
-
-### ETL
-
-![](doc/etl.png)
-
+GPL-2.0

@@ -71,29 +71,6 @@ $ python3 live/consumer.py /path/to/repository
 
 情感分析模块使用Java语言编写，依赖如下：
 
-```xml
-<dependencies>
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-core</artifactId>
-            <version>3.6.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.rabbitmq</groupId>
-            <artifactId>amqp-client</artifactId>
-            <version>5.2.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.46</version>
-        </dependency>
-
-    </dependencies>
-```
-
 运行`cn.edu.zju.douyu.mq.LiveParser`即可
 
 ### 2.4 运行Web模块
